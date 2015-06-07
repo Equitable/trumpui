@@ -54,56 +54,55 @@
       <div class="page-header">
         <h1>Symbol Browser</h1>
       </div>
-
-      <div class="alert alert-info" role="alert">
-        Click a symbol on the left, for a small description on the right.
-      </div>
-
+   
       <div class="row">
-
-
-        <div class="col-md-2">
-          <table class="table table-condensed">
-            <tbody>
-                {% for sym in symbols %}
-                <tr><td>{{symurl(sym)}}</td></tr>
-                {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="col-sm-7">
-          <div class="form-group">
-            <input type="text" class="form-control" id="usrqry" placeholder="Type here to begin...">
+        <form method="post" action="{{ url_for('queried_browser') }}">
+          <div class="col-md-2">
+            <table class="table table-condensed">
+              <tbody>
+                  {% for sym in symbols %}
+                  <tr><td>{{symurl(sym)}}</td></tr>
+                  {% endfor %}
+              </tbody>
+            </table>
           </div>
-
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">Panel title</h3>
+          <div class="col-sm-7">
+            <div class="form-group">
+              <input type="text" class="form-control" id="usrqry" name="qry" placeholder="{{ qry }}">
             </div>
-            <div class="panel-body">
-              Panel content
-            </div>
-          </div>
-        </div>
-
-
-        <div class="col-sm-3">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">Panel title</h3>
-            </div>
-            <div class="panel-body">
-              <div class="checkbox">
-              <p><label><input type="checkbox" name="scname" value="True" checked>Name</input></label></p>
-              <p><label><input type="checkbox" name="scdesc" value="True" checked>Description</input></label></p>
-              <p><label><input type="checkbox" name="sctags" value="True" >Tag</input></label></p>
-              <p><label><input type="checkbox" name="scmeta" value="True" >Meta</input></label></p
+            
+            
+            {% for qsym in results %}
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                {{ symurl(qsym.name) }} <span class="label label-info">{{ qsym.units }}</span> {{ qsym.description }}
               </div>
-              <button type="submit" class="btn btn-default">Search</button>
+              <div class="panel-body">
+                {{ qsym.df.index[0] }} - {{ qsym.df.index[-1] }}
+                {% for symtag in qsym.tags %}
+                <button type="button" class="btn btn-xs btn-success">{{ symtag.tag }}</button>
+                {% endfor %}  
+              </div>
             </div>
-        </div>
-      </div> <!-- /row -->
+            {% endfor %}
+          </div>
+          <div class="col-sm-3">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Search By</h3>
+              </div>
+              <div class="panel-body">
+                <div class="checkbox">
+                    <p><label><input type="checkbox" name="scname" value="True" checked>Name</label></p>
+                    <p><label><input type="checkbox" name="scdesc" value="True" checked>Description</label></p>
+                    <p><label><input type="checkbox" name="sctags" value="True" >Tag</label></p>
+                    <p><label><input type="checkbox" name="scmeta" value="True" >Meta</label></p>
+                </div>
+                <button type="submit" class="btn btn-default">Search</button>
+              </div>
+          </div>
+        </div> <!-- /row -->
+        </form>
     </div> <!-- /container -->
 
 

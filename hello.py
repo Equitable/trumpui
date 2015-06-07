@@ -15,16 +15,18 @@ def symurl(sym):
     return Markup(r"<a href=/s/{0}>{0}</a>".format(sym)) 
 app.jinja_env.globals.update(symurl=symurl)
 
-@app.route("/")
-def hello():
-    with app.test_request_context():
-        s = url_for('search')
+@app.route("/q/", methods=['POST'])
+def queried_browser():
+    qry = request.form['qry']
     syms = sm.list_symbols()
-    return render_template('home.html',symbols=syms)
+    results = sm.list_symbols(False)
+    return render_template('home.html', symbols=syms, qry=qry, results=results)
 
-@app.route("/search")
-def search():
-    return "Search, Trump."
+@app.route("/")
+def default_browser():
+    qry = "Type here to search Trump"
+    syms = sm.list_symbols()
+    return render_template('home.html', symbols=syms, qry=qry, results=[])        
 
 @app.route("/s/<symbol>")
 def symbol_page(symbol):
