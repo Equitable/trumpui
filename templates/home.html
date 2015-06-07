@@ -71,20 +71,25 @@
               <input type="text" class="form-control" id="usrqry" name="qry" placeholder="{{ qry }}">
             </div>
             
-            
-            {% for qsym in results %}
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                {{ symurl(qsym.name) }} <span class="label label-info">{{ qsym.units }}</span> {{ qsym.description }}
+            {% if results %}
+              {% for qsym in results %}
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  {{ symurl(qsym.name) }} <span class="label label-info">{{ qsym.units }}</span> {{ qsym.description }}
+                </div>
+                <div class="panel-body">
+                  {{ qsym.df.index[0] }} - {{ qsym.df.index[-1] }}
+                  {% for symtag in qsym.tags %}
+                  <button type="button" class="btn btn-xs btn-success">{{ symtag.tag }}</button>
+                  {% endfor %}  
+                </div>
               </div>
-              <div class="panel-body">
-                {{ qsym.df.index[0] }} - {{ qsym.df.index[-1] }}
-                {% for symtag in qsym.tags %}
-                <button type="button" class="btn btn-xs btn-success">{{ symtag.tag }}</button>
-                {% endfor %}  
-              </div>
-            </div>
-            {% endfor %}
+              {% endfor %}
+            {% else %}
+            {% if (msg != 'Type to Search') %}
+            <h3><span class="label label-danger">{{ msg }}</span></h3>
+            {% endif %}
+            {% endif %}
           </div>
           <div class="col-sm-3">
             <div class="panel panel-default">
@@ -93,10 +98,10 @@
               </div>
               <div class="panel-body">
                 <div class="checkbox">
-                    <p><label><input type="checkbox" name="scname" value="True" checked>Name</label></p>
-                    <p><label><input type="checkbox" name="scdesc" value="True" checked>Description</label></p>
-                    <p><label><input type="checkbox" name="sctags" value="True" >Tag</label></p>
-                    <p><label><input type="checkbox" name="scmeta" value="True" >Meta</label></p>
+                    <p><label><input type="checkbox" name="scname" value="True" {% if name %}checked{% endif %}>Name</label></p>
+                    <p><label><input type="checkbox" name="scdesc" value="True" {% if desc %}checked{% endif %}>Description</label></p>
+                    <p><label><input type="checkbox" name="sctags" value="True" {% if tags %}checked{% endif %}>Tags</label></p>
+                    <p><label><input type="checkbox" name="scmeta" value="True" {% if meta %}checked{% endif %}>Meta Value</label></p>
                 </div>
                 <button type="submit" class="btn btn-default">Search</button>
               </div>

@@ -18,15 +18,26 @@ app.jinja_env.globals.update(symurl=symurl)
 @app.route("/q/", methods=['POST'])
 def queried_browser():
     qry = request.form['qry']
-    syms = sm.list_symbols()
-    results = sm.list_symbols(False)
-    return render_template('home.html', symbols=syms, qry=qry, results=results)
+    name = request.form.has_key('scname')
+    desc = request.form.has_key('scdesc')
+    tags = request.form.has_key('sctags')
+    meta = request.form.has_key('scmeta')
+    syms = sm.search(StringOnly=True)
+    
+    if (len(qry) > 0) and (name or desc or tags or meta):
+        results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta)
+        msg = "No Results Found"
+    else:
+        results = []
+        msg = "Must type something, and select either name, description, tags or meta."
+    return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta)
 
 @app.route("/")
 def default_browser():
     qry = "Type here to search Trump"
-    syms = sm.list_symbols()
-    return render_template('home.html', symbols=syms, qry=qry, results=[])        
+    syms = sm.search(StringOnly=True)
+    msg = "Type to Search"
+    return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=[])        
 
 @app.route("/s/<symbol>")
 def symbol_page(symbol):
