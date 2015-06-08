@@ -1,6 +1,12 @@
 from flask import Flask, request, session, url_for, redirect, \
     render_template, abort, g, flash, _app_ctx_stack
 
+import cStringIO as cio
+
+import sys
+
+sys.path.insert(1,'/usr/lib/pymodules/python2.7')
+
 import pandas as pd
 
 dw = pd.get_option('display.width')
@@ -27,6 +33,41 @@ def about():
     mac = "Currently Connected to..."
     info = str(eng.dialect) + Markup( "<br>" + str(eng.name) + "<br>" + str(eng))
     return render_template('about.html', msg_title="About Trump", msg_macro=mac, msg_info=info)
+
+@app.route("/chart/<symbol>")
+@app.route("/chart/<symbol>/<freq>/<opt>/<kind>")
+def chart(symbol,freq=None,opt=None,kind=None):
+    sym = sm.get(symbol)
+    df = sym.df
+    
+    f = cio.StringIO()
+
+    
+    if freq:
+        df = df.asfreq(freq, method='ffill')
+    
+    if opt == 'pct':
+        df = df.pct_change(1)
+    
+    if kind:
+        ax = df.plot(kind=kind, title=sym.description, legend=False)
+    else:
+        ax = df.plot(title=sym.description, legend=False)
+        
+
+    ax.set_xlabel(sym.name)
+    ax.set_ylabel(sym.units)
+        
+    
+    fig = ax.get_figure()
+    
+    fig.savefig(f, format='png')
+    
+    header = {'Content-type' : 'image/png'}
+    f.seek(0)
+    data = f.read()
+    
+    return data, 200, header
 
 @app.route("/orfs/<symbol>")
 def orfs(symbol):
