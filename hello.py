@@ -21,15 +21,27 @@ def taglink(tag):
 app.jinja_env.globals.update(taglink=taglink)
     
 
+@app.route("/about")
+def about():
+    eng = sm.eng
+    mac = "Currently Connected to..."
+    info = str(eng.dialect) + Markup( "<br>" + str(eng.name) + "<br>" + str(eng))
+    return render_template('about.html', msg_title="About Trump", msg_macro=mac, msg_info=info)
+
+@app.route("/orfs/<symbol>")
+def orfs(symbol):
+    sym = sm.get(symbol)
+    data = sym._all_datatable_data()
+    return render_template('symbol_orfs.html', symbol=sym, data=data)
 
 @app.route("/c/<symbol>")
 def cacheit(symbol):
     sym = sm.get(symbol)
     result = sym.cache()
     tit = "Recaching Results"
-    mac = sym.name + " was re-cached successfully!"
+    mac = sym.name + " was (likely) re-cached successfully!"
     nfo = Markup(result.html)
-    return render_template('confirmation.html', msg_title=tit, msg_macro="", msg_info=nfo)
+    return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
 
 @app.route("/t/<tag>")
 def tagged(tag):

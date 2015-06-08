@@ -100,21 +100,33 @@
              {% endfor %}   
              <br><h6><span class="label label-info">{{ symbol.units }}</span></h6>
         </div>
-        <div class="col-md-2">
-          <br><font size=1><span class="label label-info">{{ symbol.dtype.datadef }}</span></font><br>{{ sdfhtml }}<br>length : {{ lind }}<br>dtype : {{ dtype }}
-        </div>
-        <div class="col-md-3">
-          <br><font size=1><span class="label label-info">{{ symbol.index.indimp }}</span></font><br>{{ ind }}<br>
-        </div>
-        <div class="col-md-3">
-             <br><font size=1>
-             {% for hp, h in symbol.handle.points %}
-             {{ hp }}<br>
-             <span class="label label-danger">{{ h }}</span><br>
-             {% endfor %}
-             </font>
-        </div>
       </div>
+      <div class="row">
+        <table class="table table-condensed">
+          {% for row in data %}
+          <tr>
+            {% for cell in row[:2] %}<td>{{ cell }}</td>{% endfor %}
+            <td><input type="text" class="form-control" placeholder="{{ row[2] }}"></td>
+            {% for cell in row[3:-1] %}<td>{{ cell }}</td>{% endfor %}
+            <td><input type="text" class="form-control" placeholder="{{ row[-1] }}"></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <div class="row">
         <div class="col-md-9">
           <table class="table">
