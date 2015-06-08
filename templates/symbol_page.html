@@ -96,7 +96,7 @@
              <h2>{{ symbol.name }}</h2>
              <h5>{{ symbol.description }}</h5>
              {% for symtag in symbol.tags %}
-                <button type="button" class="btn btn-xs btn-success">{{ symtag.tag }}</button>
+                {{ taglink(symtag.tag) }}
              {% endfor %}   
              <br><h6><span class="label label-info">{{ symbol.units }}</span></h6>
         </div>
@@ -135,7 +135,7 @@
           </table>
         </div>
         <div class="col-md-3">
-          <br><button type="button" class="btn btn-lg btn-default">Cache</button>
+          <br><a href="/c/{{ symbol.name }}" class="btn btn-lg btn-default">Cache</a>
         </div>
       </div>
       {% for feed in symbol.feeds %}

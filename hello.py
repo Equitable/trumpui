@@ -11,9 +11,42 @@ sm = SymbolManager()
 from jinja2 import Markup
 
 app = Flask(__name__)
+
 def symurl(sym):
-    return Markup(r"<a href=/s/{0}>{0}</a>".format(sym)) 
+    return Markup(r"<a href=/s/{0}>{0}</a>".format(sym))
 app.jinja_env.globals.update(symurl=symurl)
+
+def taglink(tag):
+    return Markup(r'<a class="btn btn-xs btn-success" href="/t/{0}">{0}</a>'.format(tag))
+app.jinja_env.globals.update(taglink=taglink)
+    
+
+
+@app.route("/c/<symbol>")
+def cacheit(symbol):
+    sym = sm.get(symbol)
+    result = sym.cache()
+    tit = "Recaching Results"
+    mac = sym.name + " was re-cached successfully!"
+    nfo = Markup(result.html)
+    return render_template('confirmation.html', msg_title=tit, msg_macro="", msg_info=nfo)
+
+@app.route("/t/<tag>")
+def tagged(tag):
+    print tag
+    name = False
+    desc = False
+    tags = True
+    meta = False
+    syms = sm.search(StringOnly=True)
+    
+    results = sm.search(tag, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=False)
+    if len(results) == 0:
+        msg = "No Symbols Tagged {} Found".format(tag)
+    else:
+        msg = ""
+
+    return render_template('home.html', msg=msg, symbols=syms, qry="", results=results, name=name, desc=desc, tags=tags, meta=meta)
 
 @app.route("/q/", methods=['POST'])
 def queried_browser():
@@ -24,6 +57,7 @@ def queried_browser():
     meta = request.form.has_key('scmeta')
     syms = sm.search(StringOnly=True)
     
+    print syms
     if (len(qry) > 0) and (name or desc or tags or meta):
         results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta)
         msg = "No Results Found"
