@@ -1,5 +1,5 @@
 from flask import Flask, request, session, url_for, redirect, \
-    render_template, abort, g, flash, _app_ctx_stack
+    render_template, abort, g, flash, _app_ctx_stack, make_response
 
 import cStringIO as cio
 
@@ -33,6 +33,14 @@ def about():
     mac = "Currently Connected to..."
     info = str(eng.dialect) + Markup( "<br>" + str(eng.name) + "<br>" + str(eng))
     return render_template('about.html', msg_title="About Trump", msg_macro=mac, msg_info=info)
+
+@app.route("/raiseanerror")
+def er():
+    somedict = {'jeff' : 'wins', 'trump': 'rock'}
+    
+    print somedict
+    
+    raise Exception("Nothing , jeff put this here")
 
 @app.route("/chart/<symbol>")
 @app.route("/chart/<symbol>/<freq>/<opt>/<kind>")
@@ -68,6 +76,43 @@ def chart(symbol,freq=None,opt=None,kind=None):
     data = f.read()
     
     return data, 200, header
+
+@app.route("/export/<ext>/<symbol>")
+@app.route("/export/<ext>/<symbol>/<freq>")
+def export(ext, symbol, freq=None):
+    
+    sym = sm.get(symbol)
+    
+    f = cio.StringIO()
+    
+    df = sym.df
+    
+    if freq:
+        df = df.asfreq(freq, method='ffill')
+    
+    if ext == 'csv':
+        sym.df.to_csv(f, sep=',', header=True)
+        header = {'Content-Disposition' : "attachment; filename=" + sym.name + ".csv"}
+        f.seek(0)
+        data = f.read()
+        return data, 200, header    
+        
+    elif ext == 'xlsx':
+        fn = sym.name + ".xls"
+        wrtr = pd.ExcelWriter(fn, engine='xlsxwriter')
+        wrtr.book.filename = f
+        df.to_excel(wrtr, sheet_name=sym.name)
+        wrtr.save()
+        header = {'Content-Disposition' : "attachment; filename=" + sym.name + ".xls"}
+        f.seek(0)
+        data = f.read()
+        return data, 200, header
+
+#    response = make_response(f)
+#    
+#    response.headers['Content-Disposition'] = "attachment; filename=" + sym.name + ".xlsx"
+#
+#    return response
 
 @app.route("/orfs/<symbol>")
 def orfs(symbol):
