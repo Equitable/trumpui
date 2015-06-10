@@ -196,5 +196,19 @@ def s(symbol):
     dtype =  str(S.dtype)
     return render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr)
 
+@app.route("/delete/<symbol>")
+def delete(symbol):
+    """ Symbol Page """
+    sym = sm.get(symbol)
+    name = sym.name
+    sm.delete(sym)
+    
+    tit = "Deleted " + name
+    mac = "Deletion of the symbol was successful..."
+    nfo = "...Using SymbolManager.delete()"
+    # TODO check to make sure it's actually deleted
+    # Plus, some likely GitHub Issue
+    return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
+
 if __name__ == "__main__":
     app.run(debug=True)
