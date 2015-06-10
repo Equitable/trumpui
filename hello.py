@@ -35,7 +35,7 @@ def about():
     return render_template('about.html', msg_title="About Trump", msg_macro=mac, msg_info=info)
 
 @app.route("/raiseanerror")
-def er():
+def raiseanerror():
     somedict = {'jeff' : 'wins', 'trump': 'rock'}
     
     print somedict
@@ -49,8 +49,7 @@ def chart(symbol,freq=None,opt=None,kind=None):
     df = sym.df
     
     f = cio.StringIO()
-
-    
+   
     if freq:
         df = df.asfreq(freq, method='ffill')
     
@@ -62,7 +61,6 @@ def chart(symbol,freq=None,opt=None,kind=None):
     else:
         ax = df.plot(title=sym.description, legend=False)
         
-
     ax.set_xlabel(sym.name)
     ax.set_ylabel(sym.units)
         
@@ -108,12 +106,6 @@ def export(ext, symbol, freq=None):
         data = f.read()
         return data, 200, header
 
-#    response = make_response(f)
-#    
-#    response.headers['Content-Disposition'] = "attachment; filename=" + sym.name + ".xlsx"
-#
-#    return response
-
 @app.route("/orfs/<symbol>")
 def orfs(symbol):
     sym = sm.get(symbol)
@@ -121,7 +113,8 @@ def orfs(symbol):
     return render_template('symbol_orfs.html', symbol=sym, data=data)
 
 @app.route("/c/<symbol>")
-def cacheit(symbol):
+def c(symbol):
+    """ Cache a symbol """
     sym = sm.get(symbol)
     result = sym.cache()
     tit = "Recaching Results"
@@ -130,24 +123,21 @@ def cacheit(symbol):
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
 
 @app.route("/t/<tag>")
-def tagged(tag):
-    print tag
-    name = False
-    desc = False
-    tags = True
-    meta = False
+def t(tag):
+    """ Tag Searching..."""
     syms = sm.search(StringOnly=True)
     
-    results = sm.search(tag, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=False)
+    results = sm.search(tag, tags=True, dolikelogic=False)
     if len(results) == 0:
         msg = "No Symbols Tagged {} Found".format(tag)
     else:
         msg = ""
 
-    return render_template('home.html', msg=msg, symbols=syms, qry="", results=results, name=name, desc=desc, tags=tags, meta=meta)
+    return render_template('home.html', msg=msg, symbols=syms, qry="", results=results, name=False, desc=False, tags=True, meta=False)
 
 @app.route("/q/", methods=['POST'])
 def queried_browser():
+    """ Query browser """
     qry = request.form['qry']
     name = request.form.has_key('scname')
     desc = request.form.has_key('scdesc')
@@ -165,14 +155,26 @@ def queried_browser():
     return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta)
 
 @app.route("/")
-def default_browser():
+def home():
     qry = "Type here to search Trump"
     syms = sm.search(StringOnly=True)
     msg = "Type to Search"
     return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=[])        
 
+@app.route("/installtrump")
+def installtrump():
+    from trump import SetupTrump
+    SetupTrump()
+    return "Trump likely installed correctly"
+
+@app.route("/installsymbols")
+def installsymbols():
+    import setupsymbols
+    return "Likedly done creating a bunch of symbols"
+
 @app.route("/s/<symbol>")
-def symbol_page(symbol):
+def s(symbol):
+    """ Symbol Page """
     sym = sm.get(symbol)
     metaattr = [meta.attr for meta in sym.meta]
     metaattr.sort()
