@@ -71,7 +71,7 @@ for cc in ctrycodes:
     meta['Country'] = country
     wbi.add_meta(**meta)
     wbi.set_units("NoUnits")
-    wbi.add_feed(WorldBankFT('NY.GDP.MKTP.CD',cc))
+    wbi.add_feed(WorldBankFT('NY.GDP.MKTP.CD',cc, start='1950', end='2015'))
     
     AnnualIndex = FFillIT('A')
     wbi.set_indexing(AnnualIndex)

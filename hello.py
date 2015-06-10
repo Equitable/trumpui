@@ -214,4 +214,7 @@ def delete(symbol):
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if len(sys.argv) > 1:
+        app.run(debug=True)
+    else:
+        app.run('0.0.0.0')
