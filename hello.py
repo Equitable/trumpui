@@ -25,7 +25,10 @@ app.jinja_env.globals.update(symurl=symurl)
 def taglink(tag):
     return Markup(r'<a class="btn btn-xs btn-success" href="/t/{0}">{0}</a>'.format(tag))
 app.jinja_env.globals.update(taglink=taglink)
-    
+
+def cleanmaxmin(symbol):
+    return Markup(str(symbol._max_min()))
+app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
 
 @app.route("/about")
 def about():
@@ -123,7 +126,7 @@ def c(symbol):
         nfo = Markup(result.html)
     except:
         tit = "Problem!"
-        mac = "Caching of {} (likely) failed".format(symbol.name)
+        mac = "Caching of {} (likely) failed".format(sym.name)
         nfo = "Check your inbox, server logs, trump logs for more info"
         # TODO lots of work here...with the traceback
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)

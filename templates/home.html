@@ -78,7 +78,7 @@
                   {{ symurl(qsym.name) }} <span class="label label-info">{{ qsym.units }}</span> {{ qsym.description }}
                 </div>
                 <div class="panel-body">
-                  {{ qsym.df.index[0] }} - {{ qsym.df.index[-1] }}
+                  {{ cleanmaxmin(qsym) }}
                   {% for symtag in qsym.tags %}
                   {{ taglink(symtag.tag) }}
                   {% endfor %}  

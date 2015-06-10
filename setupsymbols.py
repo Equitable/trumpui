@@ -46,26 +46,39 @@ cpi.add_feed(StLouisFEDFT('CPIAUCSL'))
 cpi.cache()
 
 from pandas.io import wb
-wbtickers = wb.search('gdp.*capita.*const')
 
-for wbid, row in wbtickers.iterrows():
-    wbi = sm.create(row['id'].replace(".",""), overwrite=True)
-    metadf = row['source':'sourceOrganization'].to_frame().to_dict()[wbid]
+results = wb.search('GDP*')
+results = results[results.id == 'NY.GDP.MKTP.CD']
+r = results.T.to_dict().values()[0]
+r = {key.replace("source","WB") : value for key, value in r.iteritems()}
+
+ctrycodes = ['ABW', 'AFG', 'AGO', 'ALB', 'AND', 'ARE', 'ARG', 'ARM', 'ASM', 'ATG', 'AUS', 'AUT', 'AZE', 'BDI', 'BEL', 'BEN', 'BFA', 'BGD', 'BGR', 'BHR', 'BHS', 'BIH', 'BLR', 'BLZ', 'BMU', 'BOL', 'BRA', 'BRB', 'BRN', 'BTN', 'BWA', 'CAF', 'CAN', 'CHE', 'CHL', 'CHN', 'CIV', 'CMR', 'COD', 'COG', 'COL', 'COM', 'CPV', 'CRI', 'CUB', 'CUW', 'CYM', 'CYP', 'CZE', 'DEU', 'DJI', 'DMA', 'DNK', 'DOM', 'DZA', 'ECU', 'EGY', 'ERI', 'ESP', 'EST', 'ETH', 'FIN', 'FJI', 'FRA', 'FRO', 'FSM', 'GAB', 'GBR', 'GEO', 'GHA', 'GIN', 'GMB', 'GNB', 'GNQ', 'GRC', 'GRD', 'GRL', 'GTM', 'GUM', 'GUY', 'HKG', 'HND', 'HRV', 'HTI', 'HUN', 'IDN', 'IMN', 'IND', 'IRL', 'IRN', 'IRQ', 'ISL', 'ISR', 'ITA', 'JAM', 'JOR', 'JPN', 'KAZ', 'KEN', 'KGZ', 'KHM', 'KIR', 'KNA', 'KOR', 'KWT', 'LAO', 'LBN', 'LBR', 'LBY', 'LCA', 'LIE', 'LKA', 'LSO', 'LTU', 'LUX', 'LVA', 'MAC', 'MAF', 'MAR', 'MCO', 'MDA', 'MDG', 'MDV', 'MEX', 'MHL', 'MKD', 'MLI', 'MLT', 'MMR', 'MNE', 'MNG', 'MNP', 'MOZ', 'MRT', 'MUS', 'MWI', 'MYS', 'NAM', 'NCL', 'NER', 'NGA', 'NIC', 'NLD', 'NOR', 'NPL', 'NZL', 'OMN', 'PAK', 'PAN', 'PER', 'PHL', 'PLW', 'PNG', 'POL', 'PRI', 'PRK', 'PRT', 'PRY', 'PSE', 'PYF', 'QAT', 'ROU', 'RUS', 'RWA', 'SAU', 'SDN', 'SEN', 'SGP', 'SLB', 'SLE', 'SLV', 'SMR', 'SOM', 'SRB', 'SSD', 'STP', 'SUR', 'SVK', 'SVN', 'SWE', 'SWZ', 'SXM', 'SYC', 'SYR', 'TCA', 'TCD', 'TGO', 'THA', 'TJK', 'TKM', 'TLS', 'TON', 'TTO', 'TUN', 'TUR', 'TUV', 'TZA', 'UGA', 'UKR', 'URY', 'USA', 'UZB', 'VCT', 'VEN', 'VIR', 'VNM', 'VUT', 'WSM', 'YEM', 'ZAF', 'ZMB', 'ZWE']
+badlist = []
+for cc in ctrycodes:
+
+    # just to make a copy
+    meta = dict(r)
+    tickr = "GDP_" + cc
+    wbi = sm.create(tickr, overwrite=True)
     
-    metadf = {key.replace("source","WB") : value for key, value in metadf.iteritems()}
-    wbi.add_tags(row['topics'])
-    wbi.add_tags('US')
-    wbi.set_description(row['name'])
-    wbi.add_meta(**metadf)
+    #awkward, that this is the only way to get this from the API
+    country = wb.download(indicator='NY.GDP.MKTP.CD',country=cc).index.levels[0][0]
+    
+    wbi.add_tags(["economics", "world bank", "GDP"])
+    wbi.set_description(meta['name'])
+    del meta['name']
+    meta['ISO 3166-1 Country Code'] = cc
+    meta['Country'] = country
+    wbi.add_meta(**meta)
     wbi.set_units("NoUnits")
-    wbi.add_feed(WorldBankFT(row['id'],'US'))
+    wbi.add_feed(WorldBankFT('NY.GDP.MKTP.CD',cc))
     
     AnnualIndex = FFillIT('A')
     wbi.set_indexing(AnnualIndex)
+    
+    wbi.cache()
 
-    try:
-        wbi.cache()
-    except:
-        print "Couldn't cache {}".format(wbi.name)
+
+print badlist
 
 sm.finish()
