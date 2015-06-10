@@ -116,10 +116,16 @@ def orfs(symbol):
 def c(symbol):
     """ Cache a symbol """
     sym = sm.get(symbol)
-    result = sym.cache()
-    tit = "Recaching Results"
-    mac = sym.name + " was (likely) re-cached successfully!"
-    nfo = Markup(result.html)
+    try:
+        result = sym.cache()
+        tit = "Recaching Results"
+        mac = sym.name + " was (likely) re-cached successfully!"
+        nfo = Markup(result.html)
+    except:
+        tit = "Problem!"
+        mac = "Caching of {} (likely) failed".format(symbol.name)
+        nfo = "Check your inbox, server logs, trump logs for more info"
+        # TODO lots of work here...with the traceback
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
 
 @app.route("/t/<tag>")

@@ -6,7 +6,7 @@ Created on Sat Jun  6 16:02:28 2015
 """
 
 from trump.orm import SymbolManager
-from trump.templating.templates import StLouisFEDFT, QuandlFT, GoogleFinanceFT, YahooFinanceFT
+from trump.templating.templates import FFillIT, WorldBankFT, StLouisFEDFT, QuandlFT, GoogleFinanceFT, YahooFinanceFT
 
 sm = SymbolManager()
 
@@ -34,15 +34,38 @@ tsla.add_meta(Geography='USA', AssetClass='Equity', Sector='Automotive')
 tsla.set_units("USD/unit")
 tsla.add_feed(YahooFinanceFT('TSLA'))
 tsla.add_feed(GoogleFinanceFT('TSLA'))
-tsla.add_feed(QuandlFT('GOOG/NASDAQ_TSLA', fieldname='Close'))
+#tsla.add_feed(QuandlFT('GOOG/NASDAQ_TSLA', fieldname='Close'))
 tsla.cache()
 
-tsla = sm.create('CPI', overwrite=True)
-tsla.add_tags(['Consumer', 'Price Index', 'Seasonally Adjusted'])
-tsla.set_description("Consumer Price Index for All Urban Consumers: All Items")
-tsla.add_meta(Geography='USA', Factor='Inflation', Publisher="BLS")
-tsla.set_units("MoM")
-tsla.add_feed(StLouisFEDFT('CPIAUCSL'))
-tsla.cache()
+cpi = sm.create('CPI', overwrite=True)
+cpi.add_tags(['Consumer', 'Price Index', 'Seasonally Adjusted'])
+cpi.set_description("Consumer Price Index for All Urban Consumers: All Items")
+cpi.add_meta(Geography='USA', Factor='Inflation', Publisher="BLS")
+cpi.set_units("MoM")
+cpi.add_feed(StLouisFEDFT('CPIAUCSL'))
+cpi.cache()
+
+from pandas.io import wb
+wbtickers = wb.search('gdp.*capita.*const')
+
+for wbid, row in wbtickers.iterrows():
+    wbi = sm.create(row['id'].replace(".",""), overwrite=True)
+    metadf = row['source':'sourceOrganization'].to_frame().to_dict()[wbid]
+    
+    metadf = {key.replace("source","WB") : value for key, value in metadf.iteritems()}
+    wbi.add_tags(row['topics'])
+    wbi.add_tags('US')
+    wbi.set_description(row['name'])
+    wbi.add_meta(**metadf)
+    wbi.set_units("NoUnits")
+    wbi.add_feed(WorldBankFT(row['id'],'US'))
+    
+    AnnualIndex = FFillIT('A')
+    wbi.set_indexing(AnnualIndex)
+
+    try:
+        wbi.cache()
+    except:
+        print "Couldn't cache {}".format(wbi.name)
 
 sm.finish()
