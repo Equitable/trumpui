@@ -1,22 +1,32 @@
+f = open("trumpui.log",'wb+')
+f.write("pre flask import")
 from flask import Flask, request, session, url_for, redirect, \
     render_template, abort, g, flash, _app_ctx_stack, make_response
+
+
+
+f.write("pre string io import")
 
 import cStringIO as cio
 
 import sys
 
-sys.path.insert(1,'/usr/lib/pymodules/python2.7')
+#sys.path.insert(1,'/usr/lib/pymodules/python2.7')
 
 import pandas as pd
 
-dw = pd.get_option('display.width')
 from trump.orm import SymbolManager
 
 sm = SymbolManager()
 
 from jinja2 import Markup
 
+
 app = Flask(__name__)
+
+f.write("done making flask stuff")
+
+
 
 def symurl(sym):
     return Markup(r"<a href=/s/{0}>{0}</a>".format(sym))
@@ -29,6 +39,7 @@ app.jinja_env.globals.update(taglink=taglink)
 def cleanmaxmin(symbol):
     return Markup(str(symbol._max_min()))
 app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
+
 
 @app.route("/about")
 def about():
@@ -141,7 +152,6 @@ def t(tag):
         msg = "No Symbols Tagged {} Found".format(tag)
     else:
         msg = ""
-
     return render_template('home.html', msg=msg, symbols=syms, qry="", results=results, name=False, desc=False, tags=True, meta=False)
 
 @app.route("/q/", methods=['POST'])
@@ -166,7 +176,7 @@ def queried_browser():
 @app.route("/")
 def home():
     qry = "Type here to search Trump"
-    syms = sm.search(StringOnly=True)
+    syms = sm.search(stronly=True)
     msg = "Type to Search"
     return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=[])        
 
@@ -213,8 +223,25 @@ def delete(symbol):
     # Plus, some likely GitHub Issue
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
 
+f.write("\n My name is {}".format(__name__))
+
+
+if not app.debug:
+    import logging
+    from logging.handlers import RotatingFileHandler
+
+    fh = RotatingFileHandler("trumpuisite.log", 'a')
+    fh.setLevel(logging.WARNING)
+    app.logger.addHandler(fh)
+
+f.write("\I must have figured out how to handle")
+
 if __name__ == "__main__":
+    f.write("\n we shouldn't get here")
     if len(sys.argv) > 1:
         app.run(debug=True)
     else:
         app.run('0.0.0.0')
+
+f.write("\n all done!")
+f.close()
