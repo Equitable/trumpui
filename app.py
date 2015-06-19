@@ -145,7 +145,7 @@ def c(symbol):
 @app.route("/t/<tag>")
 def t(tag):
     """ Tag Searching..."""
-    syms = sm.search(StringOnly=True)
+    syms = sm.search(stronly=True)
     
     results = sm.search(tag, tags=True, dolikelogic=False)
     if len(results) == 0:
@@ -162,7 +162,7 @@ def queried_browser():
     desc = request.form.has_key('scdesc')
     tags = request.form.has_key('sctags')
     meta = request.form.has_key('scmeta')
-    syms = sm.search(StringOnly=True)
+    syms = sm.search(stronly=True)
     
     print syms
     if (len(qry) > 0) and (name or desc or tags or meta):
