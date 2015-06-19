@@ -3,15 +3,13 @@ f.write("pre flask import")
 from flask import Flask, request, session, url_for, redirect, \
     render_template, abort, g, flash, _app_ctx_stack, make_response
 
-
+import datetime as dt
 
 f.write("pre string io import")
 
 import cStringIO as cio
 
 import sys
-
-#sys.path.insert(1,'/usr/lib/pymodules/python2.7')
 
 import pandas as pd
 
@@ -24,8 +22,7 @@ from jinja2 import Markup
 
 app = Flask(__name__)
 
-f.write("done making flask stuff")
-
+f.write("done making flask object")
 
 
 def symurl(sym):
@@ -37,7 +34,15 @@ def taglink(tag):
 app.jinja_env.globals.update(taglink=taglink)
 
 def cleanmaxmin(symbol):
-    return Markup(str(symbol._max_min()))
+    mxmn = symbol._max_min()
+    
+    def tostr(obj):
+        if isinstance(obj, dt.datetime):
+            return obj.strftime("%Y-%m-%d")
+        else:
+            return str(obj)
+     
+    return Markup(" to ".join([tostr(mm) for mm in mxmn]))
 app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
 
 
