@@ -115,7 +115,7 @@ def export(ext, symbol, freq=None):
         return data, 200, header    
         
     elif ext == 'xlsx':
-        fn = sym.name + ".xls"
+        fn = sym.name + ".xlsx"
         wrtr = pd.ExcelWriter(fn, engine='xlsxwriter')
         wrtr.book.filename = f
         df.to_excel(wrtr, sheet_name=sym.name)
@@ -129,6 +129,7 @@ def export(ext, symbol, freq=None):
 def orfs(symbol):
     sym = sm.get(symbol)
     data = sym._all_datatable_data()
+    data = [(i,row) for i,row in enumerate(data)]
     return render_template('symbol_orfs.html', symbol=sym, data=data)
 
 @app.route("/c/<symbol>")
@@ -184,6 +185,25 @@ def home():
     syms = sm.search(stronly=True)
     msg = "Type to Search"
     return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=[])        
+
+@app.route("/orfssaved/", methods=['POST'])
+def orfssaved():
+    usrinput = request.form
+    
+    comment = usrinput['comment']
+    
+    # Some major thinking needs to be done here...to implement this in a robust way, for all data and index 
+    # types
+    
+    def isgood(v):
+        return len(v) > 0
+    def togood(v):
+        return float(v)
+    
+    ors = {int(key[2:]) : togood(value) for key,value in usrinput.iteritems() if isgood(value) and key[:2] == 'or'}
+    fss = {int(key[2:]) : togood(value) for key,value in usrinput.iteritems() if isgood(value) and key[:2] == 'fs'}
+    
+    return "{} {} {}".format(str(ors),str(fss),comment)
 
 @app.route("/installtrump")
 def installtrump():

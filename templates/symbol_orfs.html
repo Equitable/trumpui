@@ -102,16 +102,24 @@
         </div>
       </div>
       <div class="row">
+        <form method="post" action="{{ url_for('orfssaved') }}">
         <table class="table table-condensed">
-          {% for row in data %}
+          {% for irow in data %}
           <tr>
-            {% for cell in row[:2] %}<td>{{ cell }}</td>{% endfor %}
-            <td><input type="text" class="form-control" placeholder="{{ row[2] }}"></td>
-            {% for cell in row[3:-1] %}<td>{{ cell }}</td>{% endfor %}
-            <td><input type="text" class="form-control" placeholder="{{ row[-1] }}"></td>
+            {% for cell in irow[1][:2] %}<td>{{ cell }}</td>{% endfor %}
+            <td><input type="text" name="or{{ irow[0] }}" class="form-control" placeholder="{{ irow[1][2] }}"></td>
+            {% for cell in irow[1][3:-1] %}<td>{{ cell }}</td>{% endfor %}
+            <td><input type="text" name="fs{{ irow[0] }}" class="form-control" placeholder="{{ irow[1][-1] }}"></td>
           </tr>
           {% endfor %}
+          <tr>
+          <td colspan={{ symbol.n_feeds + 4 }}><input type="text" name="comment" class="form-control" placeholder="No Comment"></td>
+          </tr>
+          <tr>
+            <td align="right" colspan={{ symbol.n_feeds + 4 }}><button type="submit" class="btn btn-default">Submit</button>
+          </tr>
         </table>
+        </form>
       </div>
       
       
@@ -145,9 +153,6 @@
               </tr>
             </tbody>
           </table>
-        </div>
-        <div class="col-md-3">
-          <br><a href="/c/{{ symbol.name }}" class="btn btn-lg btn-default">Cache</a>
         </div>
       </div>
       {% for feed in symbol.feeds %}
