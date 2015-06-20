@@ -107,9 +107,9 @@
           {% for irow in data %}
           <tr>
             {% for cell in irow[1][:2] %}<td>{{ cell }}</td>{% endfor %}
-            <td><input type="text" name="or{{ irow[0] }}" class="form-control" placeholder="{{ irow[1][2] }}"></td>
+            <td><input type="text" name="or{{ irow[0] }}" class="form-control" placeholder="{{ irow[1][2] }}"><input type="hidden" name="origor{{ irow[0] }}" value="{{ irow[1][2] }}"></td>
             {% for cell in irow[1][3:-1] %}<td>{{ cell }}</td>{% endfor %}
-            <td><input type="text" name="fs{{ irow[0] }}" class="form-control" placeholder="{{ irow[1][-1] }}"></td>
+            <td><input type="text" name="fs{{ irow[0] }}" class="form-control" placeholder="{{ irow[1][-1] }}"><input type="hidden" name="origfs{{ irow[0] }}" value="{{ irow[1][-1] }}"></td>
           </tr>
           {% endfor %}
           <tr>
@@ -119,15 +119,63 @@
             <td align="right" colspan={{ symbol.n_feeds + 4 }}><button type="submit" class="btn btn-default">Submit</button>
           </tr>
         </table>
+        <input type="hidden" name="symbol" value="{{ symbol.name }}">
         </form>
       </div>
       
+      <h3>Overrides</h3>
+      {% for ovrd in ors %}
+      <div class="row">
+        <div class="col-md-1">
+          <div class="col-md-6">
+            <a href="/deleteorfs/override/{{ symbol.name }}/{{ ovrd.ornum }}" class="btn btn-danger btn-xs">&#x2716;</a>
+          </div>
+          <div class="col-md-6">
+            <a href="#" class="btn btn-default btn-xs disabled">{{ ovrd.ornum }}</a>
+          </div>
+        </div>
+        <div class="col-md-3">
+            {{ ovrd.dt_log }} <br>
+            by user "{{ ovrd.user }}"
+        </div>
+        <div class="col-md-3">
+          <h4>{{ ovrd.ind }} | {{ ovrd.val }}</h4>
+        </div>
+        <div class="col-md-5">
+          <h5>{{ ovrd.comment }}</h5>
+        </div>
+      </div>
+      {% endfor %}
+      
+      <h3>Fail Safes</h3>
+      
+      {% for flsf in fss %}
+      <div class="row">
+        <div class="col-md-1">
+          <div class="col-md-6">
+            <a href="/deleteorfs/failsafe/{{ symbol.name }}/{{ flsf.fsnum }}" class="btn btn-danger btn-xs">&#x2716;</a>
+          </div>
+          <div class="col-md-6">
+            <a href="#" class="btn btn-default btn-xs disabled">{{ flsf.fsnum }}</a>
+          </div>
+        </div>
+        <div class="col-md-3">
+            {{ flsf.dt_log }} <br>
+            by user "{{ flsf.user }}"
+        </div>
+        <div class="col-md-3">
+          <h4>{{ flsf.ind }} | {{ flsf.val }}</h4>
+        </div>
+        <div class="col-md-5">
+          <h5>{{ flsf.comment }}</h5>
+        </div>
+      </div>
+      {% endfor %}    
       
       
       
       
-      
-      
+      <h3>Feed Details</h3>
       
       
       

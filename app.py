@@ -13,7 +13,10 @@ import sys
 
 import pandas as pd
 
-from trump.orm import SymbolManager
+import trump
+print trump.__file__
+
+from trump import SymbolManager
 
 sm = SymbolManager()
 
@@ -130,7 +133,15 @@ def orfs(symbol):
     sym = sm.get(symbol)
     data = sym._all_datatable_data()
     data = [(i,row) for i,row in enumerate(data)]
-    return render_template('symbol_orfs.html', symbol=sym, data=data)
+    orfss = sym.existing_orfs()
+    
+    ors = orfss['or']
+    ors.sort(key=lambda o: (o.ind, o.ornum))
+    
+    fss = orfss['fs']
+    fss.sort(key=lambda f: (f.ind, f.fsnum))
+    
+    return render_template('symbol_orfs.html', symbol=sym, data=data, ors=ors, fss=fss)
 
 @app.route("/c/<symbol>")
 def c(symbol):
@@ -147,6 +158,11 @@ def c(symbol):
         nfo = "Check your inbox, server logs, trump logs for more info"
         # TODO lots of work here...with the traceback
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
+
+@app.route("/deleteorfs/<which>/<sym>/<orfs_num>")
+def deleteorfs(which, sym, orfs_num):
+    sm.delete_orfs(sym, which, orfs_num)
+    return "Deleted {} # {} for {}".format(which, orfs_num, sym)
 
 @app.route("/t/<tag>")
 def t(tag):
@@ -191,19 +207,37 @@ def orfssaved():
     usrinput = request.form
     
     comment = usrinput['comment']
+    sym = usrinput['symbol']
+    sym = sm.get(sym)
     
     # Some major thinking needs to be done here...to implement this in a robust way, for all data and index 
     # types
     
     def isgood(v):
-        return len(v) > 0
+        if len(v) > 0 and v != "None":
+            return True
+        else:
+            return False
+    
     def togood(v):
         return float(v)
     
-    ors = {int(key[2:]) : togood(value) for key,value in usrinput.iteritems() if isgood(value) and key[:2] == 'or'}
-    fss = {int(key[2:]) : togood(value) for key,value in usrinput.iteritems() if isgood(value) and key[:2] == 'fs'}
+    orfss = {(int(key[2:]),key[:2]) : togood(value) for key,value in usrinput.iteritems() if isgood(value) and key[:2] in ('or','fs') and key[:4] != 'orig'}
     
-    return "{} {} {}".format(str(ors),str(fss),comment)
+    origorfss = {(int(key[6:]),key[:2]) : togood(value) for key,value in usrinput.iteritems() if isgood(value) and key[4:6] in ('or','fs')}
+    
+    for orfs, value in orfss.iteritems():
+        if orfs in origorfss:
+            doadd = orfss[orfs] != origorfss[orfs]
+        else:
+            doadd = True
+        
+        if doadd:
+            sm.add_existing_ind_orfs(orfs[1], sym, orfs[0], value, comment) 
+    
+    sym.cache()
+    
+    return "{} {}".format(str(orfss),comment)
 
 @app.route("/installtrump")
 def installtrump():
