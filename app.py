@@ -41,6 +41,44 @@ app = Flask(__name__)
 
 f.write("done making flask object")
 
+def symbfbutton(symbol, handlepoint):
+    bf = symbol.handle.setting(handlepoint)
+    
+    flagstate = zip(bf.flags, bf.bools)
+    
+    link = "/ch/{}/{}/".format(symbol.name, handlepoint)
+    link = link + "{}"
+    
+    def switchr(b):
+        if b:
+            return " class='btn btn-default btn-xs active' style='font-size : 7px; padding: 0px 2px;' role='button' "
+        else:
+            return " class='btn btn-default btn-xs' style='font-size : 7px; padding: 0px 2px;' role='button' "
+        
+    ret = ["<a href='{}' {}>{}</a>".format(link.format(i), switchr(flgst), flg) for i, (flg, flgst) in enumerate(flagstate)]
+    ret = " ".join(ret)
+    return Markup(ret)
+app.jinja_env.globals.update(symbfbutton=symbfbutton)
+
+def feedbfbutton(symbol, feed, handlepoint):
+    bf = feed.handle.setting(handlepoint)
+    
+    flagstate = zip(bf.flags, bf.bools)
+    
+    link = "/ch/{}/{}/".format(symbol.name, handlepoint)
+    link = link + "{}/" + str(feed.fnum)
+    
+    def switchr(b):
+        if b:
+            return " class='btn btn-default btn-xs active' style='font-size : 7px; padding: 0px 2px;' role='button' "
+        else:
+            return " class='btn btn-default btn-xs' style='font-size : 7px; padding: 0px 2px;' role='button' "
+        
+    ret = ["<a href='{}' {}>{}</a>".format(link.format(i), switchr(flgst), flg) for i, (flg, flgst) in enumerate(flagstate)]
+    ret = " ".join(ret)
+    return Markup(ret)
+app.jinja_env.globals.update(feedbfbutton=feedbfbutton)
+
 
 def symurl(sym):
     return Markup(r"<a href=/s/{0}>{0}</a>".format(sym))
@@ -297,6 +335,28 @@ def deleteorfs(which, sym, orfs_num):
     nfo = "Deleted {} # {} for {}".format(which, orfs_num, sym.name)
     return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo)
 
+@app.route("/ch/<sym>/<handlepoint>/<togglebit>")
+@app.route("/ch/<sym>/<handlepoint>/<togglebit>/<feednum>")
+def changehandle(sym,handlepoint,togglebit,feednum=-1):
+    sym = sm.get(sym)
+    togglebit = int(togglebit)
+    feednum = int(feednum)
+    
+    if feednum == -1:
+        bf = sym.handle.setting(handlepoint)
+    else:
+        bf = sym.feeds[feednum].handle.setting(handlepoint)
+    
+    bf[togglebit] = not bf[togglebit]
+    
+    if feednum == -1:
+        setattr(sym.handle, handlepoint, bf)
+    else:
+        setattr(sym.feeds[feednum].handle, handlepoint, bf)
+        
+    return redirect("/s/{}".format(sym.name))
+
+    
 
 @app.route("/t/<tag>")
 def t(tag):

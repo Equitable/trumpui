@@ -144,7 +144,7 @@
              <br><font size=1>
              {% for hp, h in symbol.handle.points %}
              {{ hp }}<br>
-             <span class="label label-danger">{{ h }}</span><br>
+             <span class="label label-warning">{{ symbfbutton(symbol,hp) }}</span><br>
              {% endfor %}
              </font>
         </div>
@@ -193,14 +193,14 @@
         <div class="col-md-2"><font size=1>
              {% for hp, h in feed.handle.points[:3] %}
              {{ hp }}<br>
-             <span class="label label-danger">{{ h }}</span><br>
+             <span class="label label-info">{{ feedbfbutton(symbol,feed,hp) }}</span><br>
              {% endfor %}
              </font>
         </div>
          <div class="col-md-3"><font size=1>
              {% for hp, h in feed.handle.points[3:] %}
              {{ hp }}<br>
-             <span class="label label-danger">{{ h }}</span><br>
+             <span class="label label-info">{{ feedbfbutton(symbol,feed,hp) }}</span><br>
              {% endfor %}
              </font>
         </div>
