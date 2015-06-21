@@ -22,7 +22,21 @@ sm = SymbolManager()
 
 from jinja2 import Markup
 
+import os
+curdir = os.path.dirname(os.path.realpath(__file__))
+plotstyles = os.path.join(curdir,"plotstyles")
 
+print plotstyles
+
+import matplotlib as m
+print m.__version__
+
+import matplotlib.pyplot as plt
+try:
+    plt.style.use(os.path.join(plotstyles,"default.mplstyle"))
+except:
+    print "Couldn't load style sheet, likely have matplotlib < 1.4"
+    
 app = Flask(__name__)
 
 f.write("done making flask object")
