@@ -292,7 +292,11 @@ def c(symbol):
 @app.route("/deleteorfs/<which>/<sym>/<orfs_num>")
 def deleteorfs(which, sym, orfs_num):
     sm.delete_orfs(sym, which, orfs_num)
-    return "Deleted {} # {} for {}".format(which, orfs_num, sym)
+    sym = sm.get(sym)
+    sym.cache()
+    nfo = "Deleted {} # {} for {}".format(which, orfs_num, sym.name)
+    return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo)
+
 
 @app.route("/t/<tag>")
 def t(tag):
@@ -367,7 +371,8 @@ def orfssaved():
     
     sym.cache()
     
-    return "{} {}".format(str(orfss),comment)
+    nfo = "{} {}".format(str(orfss), comment)
+    return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo)
 
 @app.route("/installtrump")
 def installtrump():
