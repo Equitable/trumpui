@@ -64,12 +64,20 @@
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
               <li class="active"><a href="/s/{{ symbol.name}}">Symbol</a></li>
-              <li><a href="#">Munging</a></li>
-              <li><a href="#">Validity</a></li>
-              <li><a href="#">Sourcing</a></li>
-              <li><a href="#">Index</a></li>
-              <li><a href="#">Data</a></li>
+              <li><a href="/munging/{{ symbol.name }}">Munging</a></li>
+              <li><a href="/validity/{{ symbol.name }}">Validity</a></li>
+              <li><a href="/index/{{ symbol.name }}">Index</a></li>
+              <li><a href="/data/{{ symbol.name }}">Data</a></li>
               <li class="divider"></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Analyze<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="/a/{{ symbol.name }}">As Is</a></li>
+                  <li><a href="/a/{{ symbol.name }}/W">Weekly</a></li>
+                  <li><a href="/a/{{ symbol.name }}/M">Monthly</a></li>
+                  <li><a href="/a/{{ symbol.name }}/Q">Quarterly</a></li>
+                  <li><a href="/a/{{ symbol.name }}/A">Annual</a></li>
+                </ul>
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Download<span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">

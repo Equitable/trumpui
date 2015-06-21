@@ -78,6 +78,122 @@ def raiseanerror():
     
     raise Exception("Nothing , jeff put this here")
 
+
+def formattedpy(obj):
+    return Markup("<pre>" + str(obj) + "</pre>")
+
+@app.route("/a/<symbol>")
+@app.route("/a/<symbol>/<freq>")
+def a(symbol, freq=None):
+    sym = sm.get(symbol)
+    df = sym.df
+    
+    title = sym.name
+    
+    if freq:
+        title = "{} @ freq {}".format(title, freq)
+        df = df.asfreq(freq, method='ffill')
+
+    ret = Markup("<h3>Index Information</h3>")
+    ret = ret + formattedpy(df.index)
+    
+    ret = ret + formattedpy(df.dtypes)
+    
+    dfs = [df, df.pct_change(1)]
+    
+    titles = ["<h3>Raw</h3>","<h3>Percent Change</h3>"]
+    for i, df in enumerate(dfs):
+        ret = ret + Markup(titles[i])
+        ret = ret + formattedpy(df.head(5))
+
+        ret = ret + formattedpy(df.tail(5))
+
+        ret = ret + formattedpy(df.describe())
+    
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+
+@app.route("/index/<symbol>")
+def index(symbol, freq=None):
+    sym = sm.get(symbol)
+    df = sym.df
+    
+    title = sym.name
+
+    ret = Markup("<h3>Index Information</h3>")
+    ret = ret + formattedpy(df.index)
+    
+    ret = ret + formattedpy((df.index[0],df.index[-1], ))
+
+    ret = ret + formattedpy(sym.index)
+    
+    ret = ret + formattedpy(sym.index.getkwargs())
+    
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+
+@app.route("/data/<symbol>")
+def data(symbol, freq=None):
+    sym = sm.get(symbol)
+    df = sym.df
+    
+    title = sym.name
+
+    ret = Markup("<h3>Data Information</h3>")
+    ret = ret + formattedpy(sym.dtype)
+    ret = ret + formattedpy(df.dtypes)
+    
+    ret = ret + Markup("<h3>Dataframe</h3>")
+    with pd.option_context('display.max_rows', len(df)):
+        ret = ret + formattedpy(str(df))
+
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+
+
+@app.route("/munging/<symbol>")
+def munging(symbol):
+    sym = sm.get(symbol)
+    df = sym.df
+    
+    title = sym.name + " Munging"
+    
+    ret = Markup("")
+    
+    for fd in sym.feeds:
+        ret = ret + Markup("<h3>Feed " + str(fd.fnum) + "</h3>")
+        mgn = list(fd.munging)
+        if len(mgn) > 0:
+            for mg in fd.munging:
+                ret = ret + formattedpy(mg)
+        else:
+            ret = ret + "No Munging for this Feed"
+    
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+
+@app.route("/validity/<symbol>")
+def validity(symbol):
+    sym = sm.get(symbol)
+    
+    title = sym.name + " Validity"
+    
+    ret = Markup("")
+    
+    vald = list(sym.validity)
+    
+    if sym.isvalid:
+        ans = "IS VALID"
+    else:
+        ans = "IS NOT VALID"
+        
+    ret = ret + Markup("This symbol <b>{}</b>".format(ans))
+    
+    if len(vald) > 0:
+        for vl in vald:
+            ret = formattedpy(vl)
+    else:
+        et = ret + "No Validity for this Symbol"
+
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+
+
 @app.route("/chart/<symbol>")
 @app.route("/chart/<symbol>/<freq>/<opt>/<kind>")
 def chart(symbol,freq=None,opt=None,kind=None):
