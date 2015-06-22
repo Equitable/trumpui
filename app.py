@@ -14,7 +14,6 @@ import sys
 import pandas as pd
 
 import trump
-print trump.__file__
 
 from trump import SymbolManager
 
@@ -26,10 +25,7 @@ import os
 curdir = os.path.dirname(os.path.realpath(__file__))
 plotstyles = os.path.join(curdir,"plotstyles")
 
-print plotstyles
-
 import matplotlib as m
-print m.__version__
 
 import matplotlib.pyplot as plt
 try:
@@ -105,7 +101,29 @@ app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)
 def about():
     eng = sm.eng
     mac = "Currently Connected to..."
-    info = str(eng.dialect) + Markup( "<br>" + str(eng.name) + "<br>" + str(eng))
+    info = Markup("<br>".join([str(obj) for obj in [eng.name,eng, eng.dialect]]))
+    
+    info = info + Markup("<br>".join([obj.__file__ for obj in [pd, trump, m]]))
+    
+    try:
+        import xlsxwriter
+        info = info + Markup("<br>")
+        info = info + Markup(xlsxwriter.__file__)
+    except:
+        info = info + Markup("Failed to find xlsxwriter")
+    
+    info = info + Markup("<br><br>")
+    
+    info = info + Markup("<br>" + plotstyles)
+    
+    info = info + Markup("<br><br>")
+    
+    info = info + Markup("<br>".join([obj.__version__ for obj in [pd, trump, m]]))
+    
+    info = info + Markup("<br><br>")
+    
+    info = info + Markup("<br>".join([obj for obj in sys.path]))
+    
     return render_template('about.html', msg_title="About Trump", msg_macro=mac, msg_info=info)
 
 @app.route("/raiseanerror")
@@ -291,7 +309,7 @@ def export(ext, symbol, freq=None):
         wrtr.book.filename = f
         df.to_excel(wrtr, sheet_name=sym.name)
         wrtr.save()
-        header = {'Content-Disposition' : "attachment; filename=" + sym.name + ".xls"}
+        header = {'Content-Disposition' : "attachment; filename=" + sym.name + ".xlsx"}
         f.seek(0)
         data = f.read()
         return data, 200, header
@@ -354,7 +372,7 @@ def changehandle(sym,handlepoint,togglebit,feednum=-1):
     else:
         setattr(sym.feeds[feednum].handle, handlepoint, bf)
         
-    return redirect("/s/{}".format(sym.name))
+    return redirect(url_for('s',symbol=sym.name))
 
     
 
