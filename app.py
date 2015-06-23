@@ -3,31 +3,24 @@ f.write("pre flask import")
 from flask import Flask, request, session, url_for, redirect, \
     render_template, abort, g, flash, _app_ctx_stack, make_response
 
-import datetime as dt
-
 f.write("pre string io import")
 
+import datetime as dt
 import cStringIO as cio
-
-import sys
-
+import sys, os
 import pandas as pd
 
 import trump
-
 from trump import SymbolManager
 
+import matplotlib as m
+import matplotlib.pyplot as plt
+from jinja2 import Markup
 sm = SymbolManager()
 
-from jinja2 import Markup
-
-import os
 curdir = os.path.dirname(os.path.realpath(__file__))
 plotstyles = os.path.join(curdir,"plotstyles")
 
-import matplotlib as m
-
-import matplotlib.pyplot as plt
 try:
     plt.style.use(os.path.join(plotstyles,"default.mplstyle"))
 except:
@@ -166,7 +159,7 @@ def a(symbol, freq=None):
 
         ret = ret + formattedpy(df.describe())
     
-    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 @app.route("/index/<symbol>")
 def index(symbol, freq=None):
@@ -184,7 +177,7 @@ def index(symbol, freq=None):
     
     ret = ret + formattedpy(sym.index.getkwargs())
     
-    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 @app.route("/data/<symbol>")
 def data(symbol, freq=None):
@@ -201,7 +194,7 @@ def data(symbol, freq=None):
     with pd.option_context('display.max_rows', len(df)):
         ret = ret + formattedpy(str(df))
 
-    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 
 @app.route("/munging/<symbol>")
@@ -222,7 +215,7 @@ def munging(symbol):
         else:
             ret = ret + "No Munging for this Feed"
     
-    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 @app.route("/validity/<symbol>")
 def validity(symbol):
@@ -247,7 +240,7 @@ def validity(symbol):
     else:
         et = ret + "No Validity for this Symbol"
 
-    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret)
+    return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 
 @app.route("/chart/<symbol>")
@@ -343,7 +336,7 @@ def c(symbol):
         mac = "Caching of {} (likely) failed".format(sym.name)
         nfo = "Check your inbox, server logs, trump logs for more info"
         # TODO lots of work here...with the traceback
-    return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
+    return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo, symbol=sym)
 
 @app.route("/deleteorfs/<which>/<sym>/<orfs_num>")
 def deleteorfs(which, sym, orfs_num):
@@ -450,7 +443,7 @@ def orfssaved():
     sym.cache()
     
     nfo = "{} {}".format(str(orfss), comment)
-    return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo)
+    return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo, symbol=sym)
 
 @app.route("/installtrump")
 def installtrump():
