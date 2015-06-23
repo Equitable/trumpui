@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+
+    <div class="container theme-showcase" role="main">
+      {% include 'symbol_header.html' %}
+
+      {{ msg_title }}
+
+      <div class="row">
+        <h3>{{ msg_macro }}</h3>
+        <img src="{{ url_for('fig', symbol=symbol.name, freq=freq, opt=opt, kind=kind) }}" alt="Chart Placeholder">
+      </div>
+
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/docs.min.js') }}"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="{{ url_for('static', filename='js/ie10-viewport-bug-workaround.js') }}"></script>
+  </body>
+</html>

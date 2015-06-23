@@ -1,7 +1,8 @@
 f = open("trumpui.log",'wb+')
 f.write("pre flask import")
 from flask import Flask, request, session, url_for, redirect, \
-    render_template, abort, g, flash, _app_ctx_stack, make_response
+    render_template, abort, g, flash, _app_ctx_stack, make_response, \
+    send_file
 
 f.write("pre string io import")
 
@@ -137,7 +138,7 @@ def a(symbol, freq=None):
     sym = sm.get(symbol)
     df = sym.df
     
-    title = sym.name
+    title = sym.name + " Analyze"
     
     if freq:
         title = "{} @ freq {}".format(title, freq)
@@ -166,7 +167,7 @@ def index(symbol, freq=None):
     sym = sm.get(symbol)
     df = sym.df
     
-    title = sym.name
+    title = sym.name + " Index"
 
     ret = Markup("<h3>Index Information</h3>")
     ret = ret + formattedpy(df.index)
@@ -184,7 +185,7 @@ def data(symbol, freq=None):
     sym = sm.get(symbol)
     df = sym.df
     
-    title = sym.name
+    title = sym.name + " Data"
 
     ret = Markup("<h3>Data Information</h3>")
     ret = ret + formattedpy(sym.dtype)
@@ -243,9 +244,9 @@ def validity(symbol):
     return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 
-@app.route("/chart/<symbol>")
-@app.route("/chart/<symbol>/<freq>/<opt>/<kind>")
-def chart(symbol,freq=None,opt=None,kind=None):
+@app.route("/fig/<symbol>")
+@app.route("/fig/<symbol>/<freq>/<opt>/<kind>")
+def fig(symbol,freq=None,opt=None,kind=None):
     sym = sm.get(symbol)
     df = sym.df
     
@@ -267,14 +268,23 @@ def chart(symbol,freq=None,opt=None,kind=None):
         
     
     fig = ax.get_figure()
+    fig.set_size_inches(8,4.5)
+    fig.savefig(f, format='png', dpi=150)
     
-    fig.savefig(f, format='png')
     
-    header = {'Content-type' : 'image/png'}
     f.seek(0)
-    data = f.read()
     
-    return data, 200, header
+    return send_file(f, mimetype='image/png')
+    # To display the image...
+    # header = {'Content-type' : 'image/png'}
+    # data = f.read()
+    # return data, 200, header
+
+@app.route("/chart/<symbol>")
+@app.route("/chart/<symbol>/<freq>/<opt>/<kind>")
+def chart(symbol,freq=None,opt=None,kind=None):
+    symbol = sm.get(symbol)
+    return render_template('chart.html', symbol=symbol, freq=freq, opt=opt, kind=kind)
 
 @app.route("/export/<ext>/<symbol>")
 @app.route("/export/<ext>/<symbol>/<freq>")
