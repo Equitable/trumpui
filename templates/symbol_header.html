@@ -1,0 +1,72 @@
+      <nav class="navbar navbar-default">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li class="active"><a href="/s/{{ symbol.name}}">Symbol</a></li>
+              <li><a href="/munging/{{ symbol.name }}">Munging</a></li>
+              <li><a href="/validity/{{ symbol.name }}">Validity</a></li>
+              <li><a href="/index/{{ symbol.name }}">Index</a></li>
+              <li><a href="/data/{{ symbol.name }}">Data</a></li>
+              <li class="divider"></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Analyze<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="/a/{{ symbol.name }}">As Is</a></li>
+                  <li><a href="/a/{{ symbol.name }}/W">Weekly</a></li>
+                  <li><a href="/a/{{ symbol.name }}/M">Monthly</a></li>
+                  <li><a href="/a/{{ symbol.name }}/Q">Quarterly</a></li>
+                  <li><a href="/a/{{ symbol.name }}/A">Annual</a></li>
+                </ul>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Download<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li class="dropdown-header">Excel</li>
+                  <li><a href="/export/xlsx/{{ symbol.name }}">As Is</a></li>
+                  <li><a href="/export/xlsx/{{ symbol.name }}/W">Weekly</a></li>
+                  <li><a href="/export/xlsx/{{ symbol.name }}/M">Monthly</a></li>
+                  <li><a href="/export/xlsx/{{ symbol.name }}/Q">Quarterly</a></li>
+                  <li><a href="/export/xlsx/{{ symbol.name }}/A">Annual</a></li>
+                  <li class="dropdown-header">CSV</li>
+                  <li><a href="/export/csv/{{ symbol.name }}">As Is</a></li>
+                  <li><a href="/export/csv/{{ symbol.name }}/W">Weekly</a></li>
+                  <li><a href="/export/csv/{{ symbol.name }}/M">Monthly</a></li>
+                  <li><a href="/export/csv/{{ symbol.name }}/Q">Quarterly</a></li>
+                  <li><a href="/export/csv/{{ symbol.name }}/A">Annual</a></li>
+                </ul>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Chart<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="/chart/{{ symbol.name }}">As Is</a></li>
+                  <li class="dropdown-header">Percent Change Histogram</li>
+                  <li><a href="/chart/{{ symbol.name }}/W/pct/hist">Weekly</a></li>
+                  <li><a href="/chart/{{ symbol.name }}/M/pct/hist">Monthly</a></li>
+                  <li><a href="/chart/{{ symbol.name }}/Q/pct/hist">Quarterly</a></li>
+                  <li><a href="/chart/{{ symbol.name }}/A/pct/hist">Annual</a></li>
+                </ul>
+              </li>
+              <li><a href="#">Log</a></li>
+              <li class="divider"></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Edit <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="#">Indexing Instructions</a></li>
+                  <li><a href="#">Source Information</a></li>
+                  <li><a href="/orfs/{{ symbol.name }}">Individual Datapoints</a></li>
+                  <li class="divider"></li>
+                  <li class="dropdown-header">Handler Instructions</li>
+                  <li><a href="#">Symbol</a></li>
+                  <li><a href="#">Feeds</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
