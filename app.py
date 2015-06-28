@@ -19,6 +19,16 @@ import matplotlib.pyplot as plt
 from jinja2 import Markup
 sm = SymbolManager()
 
+import pika
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+        host='localhost'))
+channel = connection.channel()
+
+channel.queue_declare(queue='trumpweb')
+
+
+
 from collections import namedtuple, Counter
 
 SymStatus = namedtuple("SymStatus", ['name', 'completed', 'attempted', 'state', 'desc'])
@@ -337,20 +347,37 @@ def orfs(symbol):
     
     return render_template('symbol_orfs.html', symbol=sym, data=data, ors=ors, fss=fss)
 
+@app.route("/tc/<tag>")
+def tc(tag):
+    """ Cache a symbol """
+    syms = sm.search(tag, tags=True)
+    
+    for sym in syms:
+        channel.basic_publish(exchange='',
+                              routing_key='trumpweb',
+                              body=sym.name)
+        print " [x] Told cacher to cache {}".format(sym.name)
+
+    tit = "Cache in progress..."
+    mac = "Caching of tag {} (likely) worked".format(tag)
+    nfo = "Check your inbox, server logs, trump logs for more info"
+
+    return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo, symbol=sym)
+
+
 @app.route("/c/<symbol>")
 def c(symbol):
     """ Cache a symbol """
     sym = sm.get(symbol)
-    try:
-        result = sym.cache()
-        tit = "Recaching Results"
-        mac = sym.name + " was (likely) re-cached successfully!"
-        nfo = Markup(result.html)
-    except:
-        tit = "Problem!"
-        mac = "Caching of {} (likely) failed".format(sym.name)
-        nfo = "Check your inbox, server logs, trump logs for more info"
-        # TODO lots of work here...with the traceback
+    channel.basic_publish(exchange='',
+                          routing_key='trumpweb',
+                          body=symbol)
+    print " [x] Told cacher to cache {}".format(symbol)
+
+    tit = "Cache in progress..."
+    mac = "Caching of {} (likely) worked".format(symbol)
+    nfo = "Check your inbox, server logs, trump logs for more info"
+
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo, symbol=sym)
 
 @app.route("/deleteorfs/<which>/<sym>/<orfs_num>")
@@ -561,3 +588,4 @@ if __name__ == "__main__":
 
 f.write("\n all done!")
 f.close()
+connection.close()
