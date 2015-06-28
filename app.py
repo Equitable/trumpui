@@ -19,6 +19,10 @@ import matplotlib.pyplot as plt
 from jinja2 import Markup
 sm = SymbolManager()
 
+from collections import namedtuple, Counter
+
+SymStatus = namedtuple("SymStatus", ['name', 'completed', 'attempted', 'state', 'desc'])
+
 curdir = os.path.dirname(os.path.realpath(__file__))
 plotstyles = os.path.join(curdir,"plotstyles")
 
@@ -73,6 +77,7 @@ app.jinja_env.globals.update(feedbfbutton=feedbfbutton)
 def symurl(sym):
     return Markup(r"<a href=/s/{0}>{0}</a>".format(sym))
 app.jinja_env.globals.update(symurl=symurl)
+
 
 def taglink(tag):
     return Markup(r'<a class="btn btn-xs btn-success" href="/t/{0}">{0}</a>'.format(tag))
@@ -377,8 +382,6 @@ def changehandle(sym,handlepoint,togglebit,feednum=-1):
         
     return redirect(url_for('s',symbol=sym.name))
 
-    
-
 @app.route("/t/<tag>")
 def t(tag):
     """ Tag Searching..."""
@@ -390,6 +393,44 @@ def t(tag):
     else:
         msg = ""
     return render_template('home.html', msg=msg, symbols=syms, qry="", results=results, name=False, desc=False, tags=True, meta=False)
+
+@app.route("/status")
+@app.route("/status/<tag>")
+def status(tag=None):
+    
+    if tag:
+        syms = sm.search(tag,tags=True)
+    else:
+        syms = sm.search()
+    
+    completed = [sym.last_cache() for sym in syms]
+    attempts = [sym.last_cache('START') for sym in syms]
+    goodbad = [a > c for a,c in zip(completed, attempts)]
+    desc = [sym.description for sym in syms]
+    
+    statuses = [SymStatus(sym.name, c, a, s, d) for sym, c, a, s, d in zip(syms, completed, attempts, goodbad, desc)]
+    
+    return render_template('status_list.html', statuses=statuses)
+
+@app.route("/tags")
+@app.route("/tags/<tag>")
+def tags(tag=None):
+    
+    if tag:
+        syms = sm.search(tag,tags=True)
+    else:
+        syms = sm.search()
+    
+    tags = [[t.tag for t in sym.tags] for sym in syms]
+    
+    tags = [item for sublist in tags for item in sublist]
+    
+    counted = Counter(tags)
+    unique = counted.keys()
+    unique.sort()
+    
+    return render_template('tags_list.html', count=counted, tags=unique)
+
 
 @app.route("/q/", methods=['POST'])
 def queried_browser():

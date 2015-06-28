@@ -65,7 +65,7 @@ for cc in ctrycodes:
     country = wb.download(indicator='NY.GDP.MKTP.CD',country=cc).index.levels[0][0]
     
     wbi.add_tags(["economics", "world bank", "GDP"])
-    wbi.set_description(meta['name'])
+    wbi.set_description(meta['name'] + " for " + country)
     del meta['name']
     meta['ISO 3166-1 Country Code'] = cc
     meta['Country'] = country

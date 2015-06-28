@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+    <div class="container theme-showcase" role="main">
+      <div class="row">
+        <h3>Status</h3>
+        <table class="table table-condensed">
+          {% for status in statuses %}
+            {% if not status.state %}
+            <tr class="danger">
+            {% else %}
+            <tr>
+            {% endif %}
+        
+          <td>
+          {{ symurl(status.name) }}
+            </td><td>
+          {{ status.completed.strftime('%Y %a %b %-d @ %-I:%M %p') }}
+            </td><td>
+          {{ status.attempted.strftime('%a %-d @ %-I:%M %p') }}
+            </td><td>
+            <a role="button" class="btn btn-default btn-xs" href="{{ url_for('c',symbol=status.name) }}">Cache</a>
+            </td><td>
+            {{ status.desc }}
+            </td>
+          </tr>
+         {% endfor %}
+        </table>
+      </div>
+
+    </div> <!-- /container -->
+
+
+    {% include 'bootstrap_footer.html' %}
+  </body>
+</html>

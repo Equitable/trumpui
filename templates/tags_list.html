@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+    <div class="container theme-showcase" role="main">
+      <div class="row">
+        <div class="col-md-2">
+        <h3>Tags</h3>
+        <table class="table table-condensed">
+          {% for tag in tags %}
+           <tr>
+            <td>
+            <a role="button" class="btn btn-success" href="{{ url_for('t',tag=tag) }}">{{ tag }}</a>
+            </td>
+            <td>
+              {{ count[tag] }}
+             </td>
+          </tr>
+         {% endfor %}
+        </table>
+      </div>
+    </div>
+    </div> <!-- /container -->
+
+
+    {% include 'bootstrap_footer.html' %}
+  </body>
+</html>

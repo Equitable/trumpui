@@ -27,11 +27,11 @@
              {% endfor %}   
              <br><h6><span class="label label-info">{{ symbol.units }}</span></h6>
         </div>
-        <div class="col-md-2">
-          <br><font size=1><span class="label label-info">{{ symbol.dtype.datadef }}</span></font><br>{{ sdfhtml }}<br>length : {{ lind }}<br>dtype : {{ dtype }}
-        </div>
         <div class="col-md-3">
           <br><font size=1><span class="label label-info">{{ symbol.index.indimp }}</span></font><br>{{ ind }}<br>
+        </div>
+        <div class="col-md-2">
+          <br><font size=1><span class="label label-info">{{ symbol.dtype.datadef }}</span></font><br>{{ sdfhtml }}<br>length : {{ lind }}<br>dtype : {{ dtype }}
         </div>
         <div class="col-md-3">
              <br><font size=1>
@@ -99,6 +99,12 @@
         </div>
       </div>
       {% endfor %}
+      <div class="row">
+        <hr>
+        Last Completed Cache: {{ symbol.last_cache().strftime('%a %b %-d @ %-I:%M %p') }}
+        <br>
+        Last Attempted Cache: {{ symbol.last_cache('START').strftime('%a %b %-d @ %-I:%M %p') }}
+      </div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
