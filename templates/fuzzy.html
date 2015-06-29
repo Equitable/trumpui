@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+    <div class="container theme-showcase" role="main">
+
+      <div class="page-header">
+        <h1>Fuzzy Search</h1>
+      </div>
+      
+      {% for hit in hits %}
+      <div class="row">
+        <div class="col-md-10">
+          <div class="panel panel-default">
+          <div class="panel-heading">
+            {{ hit['_source']['name'] }} <span class="label label-info">{{ hit['_source']['units'] }}</span> {{ hit['_source']['description'] }}
+          </div>
+          <div class="panel-body">
+            {% for tag in hit['_source']['tags'] %}
+            {{ taglink(tag) }}
+            {% endfor %}
+            <h5></h5>
+            <dl class="dl-horizontal">
+              {% for key, value in hit['_source']['meta'].iteritems() %}
+                 <dt>{{ key }}</dt><dd>{{ value }}</dd>
+              {% endfor %}
+            </dl>
+          </div>
+          </div>
+        </div>
+        <div class="col-md-2">
+           <span class="label label-success">{{ hit['_score'] }}</span>
+        </div>
+      </div>
+      {% endfor %}
+ 
+    </div> <!-- /container -->
+
+    {% include 'bootstrap_footer.html' %}
+  </body>
+</html>
