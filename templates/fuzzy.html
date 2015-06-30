@@ -17,7 +17,44 @@
       <div class="page-header">
         <h1>Fuzzy Search</h1>
       </div>
-      
+      <form method="post" action="{{ url_for('fuzzy') }}">
+      <div class="row">
+          <div class="col-sm-12">
+            
+            <div class="form-group">
+              <input type="text" class="form-control" id="usrqry" name="qry" placeholder="{{ qry }}">
+            </div>
+            
+            {% if results %}
+              <!-- put some intelligent info here -->
+            {% else %}
+            {% if (msg != 'Type to Search') %}
+            <h3><span class="label label-danger">{{ msg }}</span></h3>
+            {% endif %}
+            {% endif %}
+          </div>
+          </div>
+        <div class="row">
+          <div class="col-sm-10">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <div class="checkbox">
+                    <label><input type="checkbox" name="scname" value="True" {% if name %}checked{% endif %}>Name</label>
+                    <label><input type="checkbox" name="scdesc" value="True" {% if desc %}checked{% endif %}>Description</label>
+                    <label><input type="checkbox" name="sctags" value="True" {% if tags %}checked{% endif %}>Tags</label>
+                    <label><input type="checkbox" name="scmeta" value="True" {% if meta %}checked{% endif %}>Meta Value</label>
+                    <label><input type="checkbox" name="scfuzz" value="True" checked>Fuzzy</label>
+                    <button type="submit" class="btn btn-default">Search</button>
+                </div>
+              </div>
+
+          </div>
+          </div>
+          <div class="col-sm-1">
+          </div>
+          <!-- /row -->
+       </div>
+    </form>
       {% for hit in hits %}
       <div class="row">
         <div class="col-md-10">

@@ -115,71 +115,74 @@ def tojson(symbol):
     return Response(response=sym.to_json(), status=200, mimetype="application/json")
 
                                                
-        
-@app.route("/fuzzy/<usrqry>")
-def fuzzy(usrqry):
+@app.route("/fuzzy/", methods=['POST'])        
+@app.route("/fuzzy/<usrqry>/")
+def fuzzy(usrqry=None):
     
-    attrs = sm.existing_meta_attr()
-    print attrs
+    if usrqry:
+        attrs = sm.existing_meta_attr()
+        print attrs
 
-    # if the string matches the symbol name
-    mt1 = {'match' : {'name' : usrqry } }
+        # if the string matches the symbol name
+        mt1 = {'match' : {'name' : usrqry } }
 
-    # if the string matches a tag
-    mt2 = {'match' : {'tags' : usrqry } }
-    
-    # same thing as above?
-    mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
+        # if the string matches a tag
+        mt2 = {'match' : {'tags' : usrqry } }
 
-    
-    # if the string is anywhere in the topics?
-    nd1 = {'nested' : {
-            'path' : 'meta',
-            'score_mode' : 'avg',
-            'query' : {
-                'bool': {
-                    'must' : [{'match' : {'meta.topics' : usrqry } }]
-                        }
-                      }
+        # same thing as above?
+        mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
+
+
+        # if the string is anywhere in the topics?
+        nd1 = {'nested' : {
+                'path' : 'meta',
+                'score_mode' : 'avg',
+                'query' : {
+                    'bool': {
+                        'must' : [{'match' : {'meta.topics' : usrqry } }]
+                            }
+                          }
+                   }
                }
-           }
 
-    # if the whole string is anywhere in any of the meta values
-    nd2 = {'nested' : {
-            'path' : 'meta',
-            'score_mode' : 'avg',
-            'query' : {
-                'multi_match': {'query' : usrqry, 'fields' : ['meta.*']}
-                      }
+        # if the whole string is anywhere in any of the meta values
+        nd2 = {'nested' : {
+                'path' : 'meta',
+                'score_mode' : 'avg',
+                'query' : {
+                    'multi_match': {'query' : usrqry, 'fields' : ['meta.*']}
+                          }
+                   }
                }
-           }
-    
-    # if the string is anywhere in the symbol name
-    wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }
 
-    # if the string is anywhere in the symbol name
-    wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
-    
-    # if it's anywhere in any field, in full
-    qs1 = {'query_string' : {'query' : usrqry } }
-    
-    # if the string is anywhere in the symbol name
-    fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
-            
+        # if the string is anywhere in the symbol name
+        wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }
 
-    hits = es.search(index='trump', body={'query' : 
-                                          {'dis_max' :
-                                            {'tie_breaker' : 0.3,
-                                             'queries' : [mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
-                                             }
-                                           }
-                                          })
-    
-    hits = hits['hits']
+        # if the string is anywhere in the symbol name
+        wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
 
-    hits = hits['hits']
-    
-    return render_template('fuzzy.html', hits=hits)
+        # if it's anywhere in any field, in full
+        qs1 = {'query_string' : {'query' : usrqry } }
+
+        # if the string is anywhere in the symbol name
+        fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
+
+
+        hits = es.search(index='trump', body={'query' : 
+                                              {'dis_max' :
+                                                {'tie_breaker' : 0.3,
+                                                 'queries' : [mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
+                                                 }
+                                               }
+                                              })
+
+        hits = hits['hits']
+
+        hits = hits['hits']
+
+        return render_template('fuzzy.html', hits=hits)
+    else:
+        return render_template('fuzzy.html', hits=[])
 
 @app.route("/about")
 def about():
