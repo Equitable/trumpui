@@ -538,6 +538,11 @@ def tags(tag=None):
 def queried_browser():
     """ Query browser """
     qry = request.form['qry']
+    fuzz = request.form.has_key('scfuzz')
+    
+    if fuzz:
+        return redirect(url_for('fuzzy', usrqry=qry))
+    
     name = request.form.has_key('scname')
     desc = request.form.has_key('scdesc')
     tags = request.form.has_key('sctags')
@@ -551,7 +556,7 @@ def queried_browser():
     else:
         results = []
         msg = "Must type something, and select either name, description, tags or meta."
-    return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta)
+    return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=False)
 
 @app.route("/")
 def home():
