@@ -10,53 +10,107 @@ from trump.templating.templates import FFillIT, WorldBankFT, StLouisFEDFT, Quand
 
 import requests
 
+dofed = False
+doraymond = True
 
 sm = SymbolManager()
 
-r = requests.get('https://www.quandl.com/api/v2/datasets.json?query=*&source_code=FED&per_page=300&page=1')
-r = r.json()
-for doc in r['docs']:
+if doraymond:
+    r = requests.get('https://www.quandl.com/api/v2/datasets.json?query=*&source_code=RAYMOND&per_page=300&page=1&auth_token=y9RJp7f7DRW3Aj7FEqq1')
+    r = r.json()
+    for doc in r['docs']:
+    
+        code = doc['code']
+        name = doc['name']
+    
+        cols = doc['column_names']
+        
+        freq = doc['frequency']
+    
+        desc = doc['description'].split("\n")
+        desc = [d.split(": ") for d in desc]
+        desc = {str(d[0]) : " ".join(d[1:]) for d in desc}
+        
+        units = "USD"
+          
+        desc['Premium'] = doc['premium'] 
+        desc['url'] = doc['display_url']
+    
+        if freq == 'daily':
+            freq = 'D'
+        elif freq == 'quarterly':
+            freq = 'Q'
+        elif freq == 'annual':
+            freq = 'A'
+        
+        meta, desc = desc, name
+        
+        meta['code'] = code
+        
+        symname = code.split("_")
+        symname = symname[0] + "".join([c[0] for c in symname])
+        
+        sym = sm.create(symname, overwrite=True)
+        
+        qdl = QuandlSecureFT("RAYMOND/" + code, fieldname='Value')
+        sym.add_feed(qdl)
+        
+        sym.add_tags(("Fundamental", "US", "Balance Sheet"))
+        sym.set_description(desc)
+        sym.set_units(units)
+        print desc
+        sym.add_meta(**meta)
+        
+        ind = FFillIT(freq)
+        sym.set_indexing(ind)
+        #sym.cache()
+        
+if dofed:
+    r = requests.get('https://www.quandl.com/api/v2/datasets.json?query=*&source_code=FED&per_page=300&page=1')
+    r = r.json()
+    for doc in r['docs']:
+    
+        code = doc['code']
+        name = doc['name']
+    
+        cols = doc['column_names']
+        
+        freq = doc['frequency']
+    
+        desc = doc['description'].split("\n")
+        desc = [d.split(": ") for d in desc]
+        desc = {str(d[0]) : " ".join(d[1:]) for d in desc}
+        
+        if desc['Units'] == 'Currency':
+            units = desc['Currency']
+            del desc['Units']
+            del desc['Currency']
+        elif desc['Units'] == 'Number':
+            units = desc['Units']
+            del desc['Units']
+    
+        desc['Premium'] = doc['premium'] 
+        desc['url'] = doc['display_url']
+    
+        if freq == 'daily':
+            freq = 'D'
+        
+        meta, desc = desc, name
+        
+        symname = "FED" + str(doc['id'])
+        
+        sym = sm.create(symname, overwrite=True)
+        
+        qdl = QuandlSecureFT("FED/" + code, fieldname='Value')
+        sym.add_feed(qdl)
+        
+        sym.add_tags(("FED", "Monetary Policy"))
+        sym.set_description(desc)
+        sym.set_units(units)
+        print desc
+        sym.add_meta(**meta)
+        sym.cache()
 
-    code = doc['code']
-    name = doc['name']
-
-    cols = doc['column_names']
-    
-    freq = doc['frequency']
-
-    desc = doc['description'].split("\n")
-    desc = [d.split(": ") for d in desc]
-    desc = {str(d[0]) : " ".join(d[1:]) for d in desc}
-    
-    if desc['Units'] == 'Currency':
-        units = desc['Currency']
-        del desc['Units']
-        del desc['Currency']
-    elif desc['Units'] == 'Number':
-        units = desc['Units']
-        del desc['Units']
-
-    desc['Premium'] = doc['premium'] 
-    desc['url'] = doc['display_url']
-
-    if freq == 'daily':
-        freq = 'D'
-    
-    meta, desc = desc, name
-    
-    symname = "FED" + str(doc['id'])
-    
-    sym = sm.create(symname, overwrite=True)
-    
-    qdl = QuandlSecureFT("FED/" + code, fieldname='Value')
-    sym.add_feed(qdl)
-    
-    sym.add_tags(("FED", "Monetary Policy"))
-    sym.set_description(desc)
-    sym.set_units(units)
-    print desc
-    sym.add_meta(**meta)
-    sym.cache()
 sm.complete()
     
 #
