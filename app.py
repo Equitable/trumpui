@@ -107,6 +107,7 @@ def cleanmaxmin(symbol):
             return str(obj)
      
     return Markup(" to ".join([tostr(mm) for mm in mxmn]))
+
 app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
 
 @app.route("/tojson/<symbol>")
@@ -114,11 +115,17 @@ def tojson(symbol):
     sym = sm.get(symbol)
     return Response(response=sym.to_json(), status=200, mimetype="application/json")
 
-                                               
-@app.route("/fuzzy/", methods=['POST'])        
-@app.route("/fuzzy/<usrqry>/")
+@app.route("/fuzzy", methods=['POST'])
+@app.route("/fuzzy/<usrqry>")   
 def fuzzy(usrqry=None):
     
+    try:
+        # Jeff, you just realized that url_for is trying to pass usrqry to fuzzy(), but /fuzzy is reciving POST.
+        usrqry = request.form['usrqry']
+    except:
+        pass
+    
+    print "found a usrqry : " + str(usrqry)
     if usrqry:
         attrs = sm.existing_meta_attr()
         print attrs
