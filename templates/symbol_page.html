@@ -100,10 +100,14 @@
       </div>
       {% endfor %}
       <div class="row">
+		{% if cachedonce %}
         <hr>
-        Last Completed Cache: {{ symbol.last_cache().strftime('%a %b %-d @ %-I:%M %p') }}
+        Last Completed Cache: {{ lastcache.strftime('%a %b %-d @ %-I:%M %p') }}
         <br>
         Last Attempted Cache: {{ symbol.last_cache('START').strftime('%a %b %-d @ %-I:%M %p') }}
+		{% else %}
+		This symbol as has never been cached successfully.
+		{% endif %}
       </div>
 
     <!-- Bootstrap core JavaScript

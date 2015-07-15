@@ -676,7 +676,12 @@ def s(symbol):
     tailhtml = Markup(tmp)
     
     dtype =  str(S.dtype)
-    return render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr)
+    
+    lastcache = sym.last_cache()
+    
+    cachedonce = not (lastcache is None)
+    
+    return render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr, lastcache=lastcache, cachedonce=cachedonce)
 
 @app.route("/delete/<symbol>")
 def delete(symbol):
