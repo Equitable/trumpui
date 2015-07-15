@@ -494,6 +494,42 @@ def changehandle(sym,handlepoint,togglebit,feednum=-1):
         
     return redirect(url_for('s',symbol=sym.name))
 
+@app.route("/search", methods=['POST','GET'])
+def search():
+    """ generic search"""
+    
+    msg = ""
+    syms = []
+    results = []
+
+    if request.method == 'POST':
+        
+        qry = request.form['qry']
+        
+        fuzz = request.form.has_key('scfuzz')
+        name = request.form.has_key('scname')
+        desc = request.form.has_key('scdesc')
+        tags = request.form.has_key('sctags')
+        meta = request.form.has_key('scmeta')
+        
+        if fuzz:
+            msg = "POST on fuzz..."
+        else:
+            results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
+            if len(results) == 0:
+                msg = "No Symbols Tagged {} Found".format(tag)
+            else:
+                results = results[:100]
+                msg = ""
+            
+    else:        
+        name, desc, tags, meta, fuzz = False, False, True, False, False
+        qry = ""
+        msg = "must be GET..."
+        
+    return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz)
+
+
 @app.route("/t/<tag>")
 def t(tag):
     """ Tag Searching..."""

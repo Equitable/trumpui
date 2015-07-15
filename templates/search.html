@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+    <div class="container theme-showcase" role="main">
+
+      <div class="page-header">
+        <h1>Search</h1>
+      </div>
+      <form method="POST" action="{{ url_for('search') }}">
+        <div class="row">
+          <div class="col-sm-9">
+            <div class="form-group">
+              <input type="text" class="form-control" id="usrqry" name="qry" placeholder="{{ qry }}">
+              {% if qry %}
+              <h3><span class="label label-info">searched: {{ qry }}</span></h3>
+              {% else %}
+              <h3><span class="label label-danger">Please enter something to search.</span></h3>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-sm-1">
+            <button type="submit" class="btn btn-default">Search</button>
+          </div>
+          <div class="col-sm-2">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Search By</h3>
+              </div>
+              <div class="panel-body">
+                <div class="checkbox">
+                    <p><label><input type="checkbox" name="scname" value="True" {% if name %}checked{% endif %}>Name</label></p>
+                    <p><label><input type="checkbox" name="scdesc" value="True" {% if desc %}checked{% endif %}>Description</label></p>
+                    <p><label><input type="checkbox" name="sctags" value="True" {% if tags %}checked{% endif %}>Tags</label></p>
+                    <p><label><input type="checkbox" name="scmeta" value="True" {% if meta %}checked{% endif %}>Meta</label></p>
+                    <p><label><input type="checkbox" name="scfuzz" value="True" {% if fuzz %}checked{% endif %}>Fuzzy (Beta)</label></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+      <div class="row">
+          {% if results %}
+            {% for qsym in results %}
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                {{ symurl(qsym.name) }} <span class="label label-info">{{ qsym.units }}</span> {{ qsym.description }}
+              </div>
+              <div class="panel-body">
+                {{ cleanmaxmin(qsym) }}
+                {% for symtag in qsym.tags %}
+                {{ taglink(symtag.tag) }}
+                {% endfor %}  
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          {% if (msg != 'Type to Search') %}
+          <h3><span class="label label-danger">{{ msg }}</span></h3>
+          {% endif %}
+          {% endif %}
+        </div>
+    </div> <!-- /container -->
+
+
+    {% include 'bootstrap_footer.html' %}
+  </body>
+</html>

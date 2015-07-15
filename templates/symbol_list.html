@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+    <div class="container theme-showcase" role="main">
+
+      <div class="page-header">
+        <h1>Symbol List</h1>
+      </div>
+   
+      <div class="row">
+        <div class="col-md-2">
+          <table class="table table-condensed">
+            <tbody>
+                  {% for sym in symbols %}
+                  <tr><td>{{symurl(sym)}}</td></tr>
+                  {% endfor %}
+            </tbody>
+          </table>
+        </div>
+    </div> <!-- /container -->
+
+    {% include 'bootstrap_footer.html' %}
+  </body>
+</html>
