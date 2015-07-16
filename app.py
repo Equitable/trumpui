@@ -32,6 +32,71 @@ channel = connection.channel()
 channel.queue_declare(queue='trumpweb')
 
 
+def doelsearch(usrqry):
+    
+    print "found a usrqry : " + str(usrqry)
+    if usrqry:
+        attrs = sm.existing_meta_attr()
+        print attrs
+
+        # if the string matches the symbol name
+        mt1 = {'match' : {'name' : usrqry } }
+
+        # if the string matches a tag
+        mt2 = {'match' : {'tags' : usrqry } }
+
+        # same thing as above?
+        mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
+
+
+        # if the string is anywhere in the topics?
+        nd1 = {'nested' : {
+                'path' : 'meta',
+                'score_mode' : 'avg',
+                'query' : {
+                    'bool': {
+                        'must' : [{'match' : {'meta.topics' : usrqry } }]
+                            }
+                          }
+                   }
+               }
+
+        # if the whole string is anywhere in any of the meta values
+        nd2 = {'nested' : {
+                'path' : 'meta',
+                'score_mode' : 'avg',
+                'query' : {
+                    'multi_match': {'query' : usrqry, 'fields' : ['meta.*']}
+                          }
+                   }
+               }
+
+        # if the string is anywhere in the symbol name
+        wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }
+
+        # if the string is anywhere in the symbol name
+        wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
+
+        # if it's anywhere in any field, in full
+        qs1 = {'query_string' : {'query' : usrqry } }
+
+        # if the string is anywhere in the symbol name
+        fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
+
+
+        hits = es.search(index='trump', body={'query' : 
+                                              {'dis_max' :
+                                                {'tie_breaker' : 0.3,
+                                                 'queries' : [mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
+                                                 }
+                                               }
+                                              })
+
+        hits = hits['hits']
+
+        hits = hits['hits']
+        return hits
+
 
 from collections import namedtuple, Counter
 
@@ -114,82 +179,6 @@ app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)
 def tojson(symbol):
     sym = sm.get(symbol)
     return Response(response=sym.to_json(), status=200, mimetype="application/json")
-
-@app.route("/fuzzy", methods=['POST'])
-@app.route("/fuzzy/<usrqry>")   
-def fuzzy(usrqry=None):
-    
-    try:
-        # Jeff, you just realized that url_for is trying to pass usrqry to fuzzy(), but /fuzzy is reciving POST.
-        usrqry = request.form['usrqry']
-    except:
-        pass
-    
-    print "found a usrqry : " + str(usrqry)
-    if usrqry:
-        attrs = sm.existing_meta_attr()
-        print attrs
-
-        # if the string matches the symbol name
-        mt1 = {'match' : {'name' : usrqry } }
-
-        # if the string matches a tag
-        mt2 = {'match' : {'tags' : usrqry } }
-
-        # same thing as above?
-        mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
-
-
-        # if the string is anywhere in the topics?
-        nd1 = {'nested' : {
-                'path' : 'meta',
-                'score_mode' : 'avg',
-                'query' : {
-                    'bool': {
-                        'must' : [{'match' : {'meta.topics' : usrqry } }]
-                            }
-                          }
-                   }
-               }
-
-        # if the whole string is anywhere in any of the meta values
-        nd2 = {'nested' : {
-                'path' : 'meta',
-                'score_mode' : 'avg',
-                'query' : {
-                    'multi_match': {'query' : usrqry, 'fields' : ['meta.*']}
-                          }
-                   }
-               }
-
-        # if the string is anywhere in the symbol name
-        wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }
-
-        # if the string is anywhere in the symbol name
-        wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
-
-        # if it's anywhere in any field, in full
-        qs1 = {'query_string' : {'query' : usrqry } }
-
-        # if the string is anywhere in the symbol name
-        fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
-
-
-        hits = es.search(index='trump', body={'query' : 
-                                              {'dis_max' :
-                                                {'tie_breaker' : 0.3,
-                                                 'queries' : [mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
-                                                 }
-                                               }
-                                              })
-
-        hits = hits['hits']
-
-        hits = hits['hits']
-
-        return render_template('fuzzy.html', hits=hits)
-    else:
-        return render_template('fuzzy.html', hits=[])
 
 @app.route("/about")
 def about():
@@ -494,6 +483,7 @@ def changehandle(sym,handlepoint,togglebit,feednum=-1):
         
     return redirect(url_for('s',symbol=sym.name))
 
+@app.route("/")
 @app.route("/search", methods=['POST','GET'])
 def search():
     """ generic search"""
@@ -501,6 +491,9 @@ def search():
     msg = ""
     syms = []
     results = []
+    hits = []
+    
+    nresults = [0,0]
 
     if request.method == 'POST':
         
@@ -512,22 +505,32 @@ def search():
         tags = request.form.has_key('sctags')
         meta = request.form.has_key('scmeta')
         
+        regular = True
+        
+        msg = ""
         if fuzz:
-            msg = "POST on fuzz..."
-        else:
-            results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
-            if len(results) == 0:
-                msg = "No Symbols Tagged {} Found".format(tag)
-            else:
-                results = results[:100]
-                msg = ""
+            msg += " Did fuzzy search"
+            hits = doelsearch(qry)
             
+            if hits:
+                nresults[0] = len(hits)
+                hits = hits[:100]
+            else:
+                hits = []
+
+        if regular:
+            results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
+            if len(results) > 0:
+                nresults[1] = len(results)
+                results = results[:100]
+            msg += " Did SQL search"
+      
     else:        
         name, desc, tags, meta, fuzz = False, False, True, False, False
         qry = ""
-        msg = "must be GET..."
+        msg = ""
         
-    return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz)
+    return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz, hits=hits, nresults=nresults)
 
 
 @app.route("/t/<tag>")
@@ -604,12 +607,12 @@ def queried_browser():
         msg = "Must type something, and select either name, description, tags or meta."
     return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=False)
 
-@app.route("/")
+@app.route("/list")
 def home():
-    qry = "Type here to search Trump"
+    #qry = "Type here to search Trump"
     syms = sm.search(stronly=True)
-    msg = "Type to Search"
-    return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=[])        
+    #msg = "Type to Search"
+    return render_template('symbol_list.html', msg="", symbols=syms, qry="", results=[])        
 
 @app.route("/orfssaved/", methods=['POST'])
 def orfssaved():

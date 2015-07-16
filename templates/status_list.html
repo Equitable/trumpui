@@ -26,10 +26,19 @@
           <td>
           {{ symurl(status.name) }}
             </td><td>
-          {{ status.completed.strftime('%Y %a %b %-d @ %-I:%M %p') }}
+		  {% set comp = status.completed %}
+		  {% if comp %}
+            {{ comp.strftime('%Y %a %b %-d @ %-I:%M %p') }}
+		  {% else %}
+		    Never cached
+		  {% endif %}
             </td><td>
-          {{ status.attempted.strftime('%a %-d @ %-I:%M %p') }}
-            </td><td>
+		  {% set attm = status.attempted %}
+		  {% if comp %}
+            {{ attm.strftime('%Y %a %b %-d @ %-I:%M %p') }}
+		  {% else %}
+		    Never cached
+		  {% endif %}            </td><td>
             <a role="button" class="btn btn-default btn-xs" href="{{ url_for('c',symbol=status.name) }}">Cache</a>
             </td><td>
             {{ status.desc }}

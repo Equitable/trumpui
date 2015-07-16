@@ -24,8 +24,10 @@
               <input type="text" class="form-control" id="usrqry" name="qry" placeholder="{{ qry }}">
               {% if qry %}
               <h3><span class="label label-info">searched: {{ qry }}</span></h3>
-              {% else %}
-              <h3><span class="label label-danger">Please enter something to search.</span></h3>
+              {{ "{0} SQL, {1} Fuzzy Results found.".format(*nresults) }}
+              {% endif %}
+              {% if msg %}
+              <h3><span class="label label-default">{{ msg }}</span></h3>
               {% endif %}
             </div>
           </div>
@@ -65,12 +67,34 @@
               </div>
             </div>
             {% endfor %}
-          {% else %}
-          {% if (msg != 'Type to Search') %}
-          <h3><span class="label label-danger">{{ msg }}</span></h3>
-          {% endif %}
           {% endif %}
         </div>
+      {% for hit in hits %}
+      <div class="row">
+        <div class="col-md-10">
+          <div class="panel panel-default">
+          <div class="panel-heading">
+            {{ hit['_source']['name'] }} <span class="label label-info">{{ hit['_source']['units'] }}</span> {{ hit['_source']['description'] }}
+          </div>
+          <div class="panel-body">
+            {% for tag in hit['_source']['tags'] %}
+            {{ taglink(tag) }}
+            {% endfor %}
+            <h5></h5>
+            <dl class="dl-horizontal">
+              {% for key, value in hit['_source']['meta'].iteritems() %}
+                 <dt>{{ key }}</dt><dd>{{ value }}</dd>
+              {% endfor %}
+            </dl>
+          </div>
+          </div>
+        </div>
+        <div class="col-md-2">
+           <span class="label label-success">{{ hit['_score'] }}</span>
+        </div>
+      </div>
+      {% endfor %}
+
     </div> <!-- /container -->
 
 
