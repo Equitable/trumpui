@@ -22,9 +22,12 @@
       
       <div class="row">
           <table class="table table-striped">
+          <tr>
+           <th>Date & Time</th><th>Event</th><th>Result</th><th>Monicker</th><th>Notes</th>
+          </tr>
           {% for ev in symbol.log %}
           <tr>
-           <td>{{ ev.evtime }}</td><td>{{ ev.event }}</td><td>{{ ev.result }}</td><td>{{ ev.monicker }}</td><td>{{ ev.note }}</td>
+           <td>{{ ev.evtime }}</td><td>{{ ev.event }}</td><td>{{ ev.evresult }}</td><td>{{ ev.monicker }}</td><td>{{ ev.note }}</td>
           </tr>
           {% endfor %}
           </table>
