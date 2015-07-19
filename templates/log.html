@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+
+    <div class="container theme-showcase" role="main">
+      {% include 'symbol_header.html' %}
+		
+      <div class="page-header">
+        <h1>{{ symbol.name + ' Event Log' }}</h1>
+      </div>
+      
+      <div class="row">
+          <table class="table table-striped">
+          {% for ev in symbol.log %}
+          <tr>
+           <td>{{ ev.evtime }}</td><td>{{ ev.event }}</td><td>{{ ev.result }}</td><td>{{ ev.monicker }}</td><td>{{ ev.note }}</td>
+          </tr>
+          {% endfor %}
+          </table>
+
+      </div>
+
+    </div> <!-- /container -->
+
+
+    {% include 'bootstrap_footer.html' %}
+  </body>
+</html>

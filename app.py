@@ -159,7 +159,7 @@ app.jinja_env.globals.update(symurl=symurl)
 
 
 def taglink(tag):
-    return Markup(r'<a class="btn btn-xs btn-success" href="/t/{0}">{0}</a>'.format(tag))
+    return Markup(r'<a class="btn btn-xs btn-success" href="/tagsearch/{0}">{0}</a>'.format(tag))
 app.jinja_env.globals.update(taglink=taglink)
 
 def cleanmaxmin(symbol):
@@ -306,6 +306,12 @@ def munging(symbol):
             ret = ret + "No Munging for this Feed"
     
     return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
+
+@app.route("/log/<symbol>")
+def log(symbol):
+    sym = sm.get(symbol)
+    return render_template('log.html', symbol=sym)
+
 
 @app.route("/validity/<symbol>")
 def validity(symbol):
@@ -485,7 +491,8 @@ def changehandle(sym,handlepoint,togglebit,feednum=-1):
 
 @app.route("/")
 @app.route("/search", methods=['POST','GET'])
-def search():
+@app.route("/tagsearch/<tag>")
+def search(tag=None):
     """ generic search"""
     
     msg = ""
@@ -525,10 +532,19 @@ def search():
                 results = results[:100]
             msg += " Did SQL search"
       
-    else:        
-        name, desc, tags, meta, fuzz = False, False, True, False, False
-        qry = ""
-        msg = ""
+    else:
+        name, desc, tags, meta, fuzz = False, False, False, False, False
+        if tag:
+            results = sm.search(tag, name=False, desc=False, tags=True, meta=False, dolikelogic=False)
+            if len(results) > 0:
+                nresults[0] = len(results)
+            qry = tag
+            msg += " Did Tag Search"
+            tags=True
+            
+        else:
+            qry = ""
+            msg = ""
         
     return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz, hits=hits, nresults=nresults)
 

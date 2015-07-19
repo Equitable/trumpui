@@ -74,7 +74,7 @@
         <div class="col-md-10">
           <div class="panel panel-default">
           <div class="panel-heading">
-            {{ hit['_source']['name'] }} <span class="label label-info">{{ hit['_source']['units'] }}</span> {{ hit['_source']['description'] }}
+            {{ symurl(hit['_source']['name']) }} <span class="label label-info">{{ hit['_source']['units'] }}</span> {{ hit['_source']['description'] }}
           </div>
           <div class="panel-body">
             {% for tag in hit['_source']['tags'] %}

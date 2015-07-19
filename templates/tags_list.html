@@ -23,7 +23,7 @@
                <a role="button" class="btn btn-default" href="{{ url_for('tc',tag=tag) }}">Cache</a>
              </td>
             <td>
-            <a role="button" class="btn btn-success" href="{{ url_for('t',tag=tag) }}">{{ tag }}</a>
+            <a role="button" class="btn btn-success" href="{{ url_for('search',tag=tag) }}">{{ tag }}</a>
             </td>
             <td>
               {{ count[tag] }}
