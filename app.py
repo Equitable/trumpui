@@ -21,7 +21,7 @@ from trump import SymbolManager
 import matplotlib as m
 import matplotlib.pyplot as plt
 from jinja2 import Markup
-sm = SymbolManager()
+
 
 import pika
 
@@ -31,7 +31,19 @@ channel = connection.channel()
 
 channel.queue_declare(queue='trumpweb')
 
-
+def usessm(func):
+    _name = func.__name__
+    def smusingroute(*args, **kwargs):
+        global sm 
+        sm = SymbolManager()
+        funcres = func(*args, **kwargs)
+        sm.finish()
+        del sm
+        return funcres
+    smusingroute.__name__ = _name
+    return smusingroute
+    
+@usessm
 def doelsearch(usrqry):
     
     print "found a usrqry : " + str(usrqry)
