@@ -43,7 +43,6 @@ def usessm(func):
     smusingroute.__name__ = _name
     return smusingroute
     
-@usessm
 def doelsearch(usrqry):
     
     print "found a usrqry : " + str(usrqry)
@@ -188,11 +187,13 @@ def cleanmaxmin(symbol):
 app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
 
 @app.route("/tojson/<symbol>")
+@usessm
 def tojson(symbol):
     sym = sm.get(symbol)
     return Response(response=sym.to_json(), status=200, mimetype="application/json")
 
 @app.route("/about")
+@usessm
 def about():
     eng = sm.eng
     mac = "Currently Connected to..."
@@ -221,20 +222,12 @@ def about():
     
     return render_template('about.html', msg_title="About Trump", msg_macro=mac, msg_info=info)
 
-@app.route("/raiseanerror")
-def raiseanerror():
-    somedict = {'jeff' : 'wins', 'trump': 'rock'}
-    
-    print somedict
-    
-    raise Exception("Nothing , jeff put this here")
-
-
 def formattedpy(obj):
     return Markup("<pre>" + str(obj) + "</pre>")
 
 @app.route("/a/<symbol>")
 @app.route("/a/<symbol>/<freq>")
+@usessm
 def a(symbol, freq=None):
     sym = sm.get(symbol)
     df = sym.df
@@ -264,6 +257,7 @@ def a(symbol, freq=None):
     return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 @app.route("/index/<symbol>")
+@usessm
 def index(symbol, freq=None):
     sym = sm.get(symbol)
     df = sym.df
@@ -282,6 +276,7 @@ def index(symbol, freq=None):
     return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 @app.route("/data/<symbol>")
+@usessm
 def data(symbol, freq=None):
     sym = sm.get(symbol)
     df = sym.df
@@ -300,6 +295,7 @@ def data(symbol, freq=None):
 
 
 @app.route("/munging/<symbol>")
+@usessm
 def munging(symbol):
     sym = sm.get(symbol)
     df = sym.df
@@ -320,6 +316,7 @@ def munging(symbol):
     return render_template('confirmation.html', msg_title=title, msg_macro=sym.description, msg_info=ret, symbol=sym)
 
 @app.route("/log/<symbol>")
+@usessm
 def log(symbol):
     sym = sm.get(symbol)
     return render_template('log.html', symbol=sym)
@@ -353,6 +350,7 @@ def validity(symbol):
 
 @app.route("/fig/<symbol>")
 @app.route("/fig/<symbol>/<freq>/<opt>/<kind>")
+@usessm
 def fig(symbol,freq=None,opt=None,kind=None):
     sym = sm.get(symbol)
     df = sym.df
@@ -389,12 +387,14 @@ def fig(symbol,freq=None,opt=None,kind=None):
 
 @app.route("/chart/<symbol>")
 @app.route("/chart/<symbol>/<freq>/<opt>/<kind>")
+@usessm
 def chart(symbol,freq=None,opt=None,kind=None):
     symbol = sm.get(symbol)
     return render_template('chart.html', symbol=symbol, freq=freq, opt=opt, kind=kind)
 
 @app.route("/export/<ext>/<symbol>")
 @app.route("/export/<ext>/<symbol>/<freq>")
+@usessm
 def export(ext, symbol, freq=None):
     
     sym = sm.get(symbol)
@@ -425,6 +425,7 @@ def export(ext, symbol, freq=None):
         return data, 200, header
 
 @app.route("/orfs/<symbol>")
+@usessm
 def orfs(symbol):
     sym = sm.get(symbol)
     data = sym._all_datatable_data()
@@ -440,6 +441,7 @@ def orfs(symbol):
     return render_template('symbol_orfs.html', symbol=sym, data=data, ors=ors, fss=fss)
 
 @app.route("/tc/<tag>")
+@usessm
 def tc(tag):
     """ Cache a symbol """
     syms = sm.search(tag, tags=True)
@@ -458,6 +460,7 @@ def tc(tag):
 
 
 @app.route("/c/<symbol>")
+@usessm
 def c(symbol):
     """ Cache a symbol """
     sym = sm.get(symbol)
@@ -473,6 +476,7 @@ def c(symbol):
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo, symbol=sym)
 
 @app.route("/deleteorfs/<which>/<sym>/<orfs_num>")
+@usessm
 def deleteorfs(which, sym, orfs_num):
     sm.delete_orfs(sym, which, orfs_num)
     sym = sm.get(sym)
@@ -482,6 +486,7 @@ def deleteorfs(which, sym, orfs_num):
 
 @app.route("/ch/<sym>/<handlepoint>/<togglebit>")
 @app.route("/ch/<sym>/<handlepoint>/<togglebit>/<feednum>")
+@usessm
 def changehandle(sym,handlepoint,togglebit,feednum=-1):
     sym = sm.get(sym)
     togglebit = int(togglebit)
@@ -504,6 +509,7 @@ def changehandle(sym,handlepoint,togglebit,feednum=-1):
 @app.route("/")
 @app.route("/search", methods=['POST','GET'])
 @app.route("/tagsearch/<tag>")
+@usessm
 def search(tag=None):
     """ generic search"""
     
@@ -562,6 +568,7 @@ def search(tag=None):
 
 
 @app.route("/t/<tag>")
+@usessm
 def t(tag):
     """ Tag Searching..."""
     syms = sm.search(stronly=True)
@@ -575,6 +582,7 @@ def t(tag):
 
 @app.route("/status")
 @app.route("/status/<tag>")
+@usessm
 def status(tag=None):
     
     if tag:
@@ -593,6 +601,7 @@ def status(tag=None):
 
 @app.route("/tags")
 @app.route("/tags/<tag>")
+@usessm
 def tags(tag=None):
     
     if tag:
@@ -612,6 +621,7 @@ def tags(tag=None):
 
 
 @app.route("/q/", methods=['POST'])
+@usessm
 def queried_browser():
     """ Query browser """
     qry = request.form['qry']
@@ -636,6 +646,7 @@ def queried_browser():
     return render_template('home.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=False)
 
 @app.route("/list")
+@usessm
 def home():
     #qry = "Type here to search Trump"
     syms = sm.search(stronly=True)
@@ -643,6 +654,7 @@ def home():
     return render_template('symbol_list.html', msg="", symbols=syms, qry="", results=[])        
 
 @app.route("/orfssaved/", methods=['POST'])
+@usessm
 def orfssaved():
     usrinput = request.form
     
@@ -692,6 +704,7 @@ def installsymbols():
     return "Likedly done creating a bunch of symbols"
 
 @app.route("/s/<symbol>")
+@usessm
 def s(symbol):
     """ Symbol Page """
     sym = sm.get(symbol)
@@ -715,6 +728,7 @@ def s(symbol):
     return render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr, lastcache=lastcache, cachedonce=cachedonce)
 
 @app.route("/delete/<symbol>")
+@usessm
 def delete(symbol):
     """ Symbol Page """
     sym = sm.get(symbol)
@@ -725,7 +739,6 @@ def delete(symbol):
     mac = "Deletion of the symbol was successful..."
     nfo = "...Using SymbolManager.delete()"
     # TODO check to make sure it's actually deleted
-    # Plus, some likely GitHub Issue
     return render_template('confirmation.html', msg_title=tit, msg_macro=mac, msg_info=nfo)
 
 f.write("\n My name is {}".format(__name__))
