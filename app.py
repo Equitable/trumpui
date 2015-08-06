@@ -18,6 +18,7 @@ import traceback
 
 import trump
 from trump import SymbolManager
+from trump.indexing import indexingtypes
 
 import matplotlib as m
 import matplotlib.pyplot as plt
@@ -687,6 +688,63 @@ def orfssaved():
     nfo = "{} {}".format(str(orfss), comment)
     return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo, symbol=sym)
 
+@app.route("/outofboundorfs/", methods=['POST'])
+@usessm
+def outofboundorfs():
+    usrinput = request.form
+    
+    switch = usrinput['switch']
+    indx_input = usrinput['indx_input']
+    valu_input = usrinput['valu_input']
+    comment = usrinput['comment']
+    sym = usrinput['symbol']
+    sym = sm.get(sym)
+    
+    indtt = indexingtypes[sym.index.indimp]
+    indkwargs = sym.index.getkwargs()
+    indt = indtt(sym.index.case, **indkwargs)
+    
+    # Then it must be python code...
+    #  TODO, move all of this logic, into the specific orfs_ind_from_str function...
+    if "{" in indx_input:
+        indx_pyval = indt.orfs_ind_from_str(indx_input)
+    else:
+        #Did this instead of strptime, to give the user a chance with the error message
+        YYYY = int(indx_input.split("-")[0])
+        MM = int(indx_input.split("-")[1])
+        DD = int(indx_input.split("-")[2])
+        indx_pyval = dt.datetime(YYYY, MM, DD)
+         
+    def isgood(v):
+        if len(v) > 0 and v != "None":
+            return True
+        else:
+            return False
+    
+    def togood(v):
+        return float(v)
+    
+    if not isgood(valu_input):
+        raise Exception("{} is no good")
+        
+    print switch
+    val = togood(valu_input)
+    
+    now = dt.datetime.now()
+    if switch == u'override':
+        print "Detected Override"
+        sm.add_override(sym, indx_pyval, val, dt_log=now, user="Nobody", comment=comment)
+    else: # switch == u'override':
+        print "Deteded Fail Safe"
+        sm.add_fail_safe(sym, indx_pyval, val, dt_log=now, user="Nobody", comment=comment)
+        
+    sym.cache()
+    
+    nfo = "{} {}".format(str(orfss), comment)
+    return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo, symbol=sym)
+
+    return "Finished!"
+
 @app.route("/installtrump")
 def installtrump():
     from trump import SetupTrump
@@ -720,7 +778,9 @@ def s(symbol):
     
     cachedonce = not (lastcache is None)
     
-    return render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr, lastcache=lastcache, cachedonce=cachedonce)
+    page = render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr, lastcache=lastcache, cachedonce=cachedonce)
+
+    return page
 
 @app.route("/delete/<symbol>")
 @usessm
