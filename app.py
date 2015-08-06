@@ -14,6 +14,7 @@ import datetime as dt
 import cStringIO as cio
 import sys, os
 import pandas as pd
+import traceback
 
 import trump
 from trump import SymbolManager
@@ -186,6 +187,13 @@ def cleanmaxmin(symbol):
 
 app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
 
+@app.errorhandler(500)
+def internal_error(exception):
+    app.logger.exception(exception)
+    trace = traceback.format_exc()
+    problem = Markup("<pre>" + trace + "</pre>")
+    return render_template('error.html', msg_title="500", msg_macro="Error: " + str(exception), msg_info=problem), 500
+    
 @app.route("/tojson/<symbol>")
 @usessm
 def tojson(symbol):
