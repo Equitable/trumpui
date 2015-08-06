@@ -45,69 +45,113 @@ def usessm(func):
     smusingroute.__name__ = _name
     return smusingroute
     
-def doelsearch(usrqry):
+def doelsearch(usrqry, name=False, desc=False, tags=False, meta=False):
     
-    print "found a usrqry : " + str(usrqry)
     if usrqry:
         attrs = sm.existing_meta_attr()
-        print attrs
-
+        
+        qrys = []
+        if name:
         # if the string matches the symbol name
-        mt1 = {'match' : {'name' : usrqry } }
+            mt1 = {'match' : {'name' : usrqry } }
+            qrys.append(mt1)
 
-        # if the string matches a tag
-        mt2 = {'match' : {'tags' : usrqry } }
+            # if the string is anywhere in the symbol name
+            wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }        
+            qrys.append(wc1)
 
-        # same thing as above?
-        mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
+            # if the string is anywhere in the symbol name
+            fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
+            qrys.append(fz1)
+            
+        if tags:
+            # if the string matches a tag
+            mt2 = {'match' : {'tags' : usrqry } }
+            qrys.append(mt2)
 
+            # if the string is anywhere in the symbol name
+            wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
+            qrys.append(wc2)
+ 
+            # if the string is anywhere in the symbol name
+            fz2 = {'fuzzy' : {'tags' : {'value' : usrqry} } }
+            qrys.append(fz2)
 
-        # if the string is anywhere in the topics?
-        nd1 = {'nested' : {
-                'path' : 'meta',
-                'score_mode' : 'avg',
-                'query' : {
-                    'bool': {
-                        'must' : [{'match' : {'meta.topics' : usrqry } }]
-                            }
-                          }
+        if name and tags:
+            mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
+            qrys.append(mt3)
+
+        if desc:
+            mt4 = {'match' : {'desc' : usrqry } }
+            qrys.append(mt4)
+            # if the string is anywhere in the symbol name
+            fz4 = {'fuzzy' : {'desc' : {'value' : usrqry} } }
+            qrys.append(fz4)
+            
+        if meta:
+            mixture = [usrqry.lower(), usrqry.upper(), usrqry.title()]
+            
+            # if the string matches a meta attribute:
+            ef5 = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'filter' : {
+                        'exists': {
+                            'field' : mixture }}}}
+            qrys.append(ef5)       
+                   
+            # if the string is anywhere in the topics?
+            # NOT SURE IF ITS ACTUALLY DOING ANYTHING
+            ndm5 = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'query' : {
+                        'bool': {
+                            'must' : [{'match' : {'meta.topics' : usrqry } }]
+                                }
+                              }
+                       }
                    }
-               }
+            qrys.append(ndm5)
 
-        # if the whole string is anywhere in any of the meta values
-        nd2 = {'nested' : {
-                'path' : 'meta',
-                'score_mode' : 'avg',
-                'query' : {
-                    'multi_match': {'query' : usrqry, 'fields' : ['meta.*']}
-                          }
+            # if the whole string is anywhere in any of the meta values
+            # NOT SURE IF ITS ACTUALLY DOING ANYTHING
+            ndq5 = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'query' : {
+                        'multi_match': {'query' : mixture , 'fields' : ['meta.*']}
+                              }
+                       }
                    }
-               }
-
-        # if the string is anywhere in the symbol name
-        wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }
-
-        # if the string is anywhere in the symbol name
-        wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
-
-        # if it's anywhere in any field, in full
-        qs1 = {'query_string' : {'query' : usrqry } }
-
-        # if the string is anywhere in the symbol name
-        fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
+            qrys.append(ndq5)
+            
+            # This one is the one responsible for picking up partial, or erroneous, CUSIPs in meta values.
+            fuzzies = [{'fuzzy' : {"meta." + a : {'min_similarity' : 0.1, 'value' : usrqry}}} for a in attrs]
+            multifuzz = {'dis_max' : {'queries' : fuzzies, 'tie_breaker' : 0.7}}
+            multifuzz = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'query' : multifuzz}}
+            qrys.append(multifuzz)
+            
+            
+        if name and tags and desc and meta:
+            # if it's anywhere in any field, in full
+            qs6 = {'query_string' : {'query' : usrqry } }
+            qrys.append(qs6)
 
 
         hits = es.search(index='trump', body={'query' : 
                                               {'dis_max' :
                                                 {'tie_breaker' : 0.3,
-                                                 'queries' : [mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
+                                                 'queries' : qrys #[mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
                                                  }
                                                }
                                               })
-
-        hits = hits['hits']
-
-        hits = hits['hits']
+        
+        # The hits, have hits...no idea.  See Elastic Search for more info.
+        hits = hits['hits']['hits']
         return hits
 
 
@@ -527,53 +571,85 @@ def search(tag=None):
     results = []
     hits = []
     
-    nresults = [0,0]
+    nresult = 0
+    nfuzz, nexct = 0, 0
 
+    start = 0
+    stop = 100
+    
     if request.method == 'POST':
         
         qry = request.form['qry']
         
         fuzz = request.form.has_key('scfuzz')
+        exct = request.form.has_key('scexct')
         name = request.form.has_key('scname')
         desc = request.form.has_key('scdesc')
         tags = request.form.has_key('sctags')
         meta = request.form.has_key('scmeta')
         
-        regular = True
+        try:
+            start = int(request.form['scstart'])
+        except:
+            start = 0
+        
+        try:
+            stop = int(request.form['scstop'])
+        except:
+            stop = 100
+        
+        print start, stop
         
         msg = ""
         if fuzz:
-            msg += " Did fuzzy search"
-            hits = doelsearch(qry)
+            hits = doelsearch(qry, name=name, desc=desc, tags=tags, meta=meta)
             
             if hits:
-                nresults[0] = len(hits)
-                hits = hits[:100]
+                nfuzz = len(hits)
+                hits = hits[start:stop]
             else:
                 hits = []
-
-        if regular:
+            msg += "Did fuzzy search, found {}.  ".format(nfuzz)
+            nresult = nfuzz
+            
+        if exct:
             results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
             if len(results) > 0:
-                nresults[1] = len(results)
-                results = results[:100]
-            msg += " Did SQL search"
-      
+                nexct = len(results)
+                results = results[start:stop]
+            msg += "Did exact search, found {}.  ".format(nexct)
+            nresult = nexct
+            if fuzz:
+                msg += "{} symbols, total.  ".format(nexct + nfuzz)
+                nresult = nexct + nfuzz
+        
+        if fuzz and exct:
+            msg += "Showing from {} up to {}.".format(start, stop)
+        if (not fuzz) and (not exct):
+            msg = "Select either Fuzzy, Exact or Both.  "
+        if not any([x for x in [name, desc, tags, meta]]):
+            msg += "Choose a combination of name, description, tags and meta"
+            
+            
     else:
-        name, desc, tags, meta, fuzz = False, False, False, False, False
+        name, desc, tags, meta, fuzz, exct = False, False, False, False, False, True
         if tag:
             results = sm.search(tag, name=False, desc=False, tags=True, meta=False, dolikelogic=False)
             if len(results) > 0:
-                nresults[0] = len(results)
+                nexct = len(results)
+                results = results[start:stop]
             qry = tag
-            msg += " Did Tag Search"
+            msg += "Did tag search, found {}.  ".format(nexct)
+            nresult = nexct
             tags=True
-            
+            msg += "Showing from {} up to {}.".format(start, stop)
         else:
+            name = True
             qry = ""
             msg = ""
-        
-    return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz, hits=hits, nresults=nresults)
+
+    
+    return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz, exct=exct, hits=hits, nresults=nresult)
 
 
 @app.route("/t/<tag>")
@@ -595,7 +671,7 @@ def t(tag):
 def status(tag=None):
     
     if tag:
-        syms = sm.search(tag,tags=True)
+        syms = sm.search(tag, tags=True)
     else:
         syms = sm.search()
     
