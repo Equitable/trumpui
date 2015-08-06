@@ -29,11 +29,11 @@ sm = SymbolManager(sme)
 
 import pika
 
-#connection = pika.BlockingConnection(pika.ConnectionParameters(
-#        host='localhost'))
-#channel = connection.channel()
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+        host='localhost'))
+channel = connection.channel()
 
-#channel.queue_declare(queue='trumpweb')
+channel.queue_declare(queue='trumpweb')
 
 def usessm(func):
     _name = func.__name__
@@ -759,10 +759,10 @@ f.write("\I must have figured out how to handle")
 if __name__ == "__main__":
     f.write("\n we shouldn't get here")
     if len(sys.argv) > 1:
-        app.run(host='127.0.0.1', port=81, debug=True)
+        app.run(host='127.0.0.1', debug=True)
     else:
         app.run()
 
 f.write("\n all done!")
 f.close()
-#connection.close()
+connection.close()
