@@ -107,10 +107,8 @@ def doelsearch(usrqry):
                                                }
                                               })
 
-        hits = hits['hits']
-
-        hits = hits['hits']
-        return hits
+        #Elastic search returns hit documents, of hits, with hits....
+        return hits['hits']['hits']
 
 
 from collections import namedtuple, Counter
@@ -591,6 +589,12 @@ def t(tag):
         msg = ""
     return render_template('home.html', msg=msg, symbols=syms, qry="", results=results, name=False, desc=False, tags=True, meta=False)
 
+def comparenodates(y,z):
+    if (y is None) or (z is None):
+        return False
+    else:
+        return y > z
+        
 @app.route("/status")
 @app.route("/status/<tag>")
 @usessm
@@ -603,7 +607,7 @@ def status(tag=None):
     
     completed = [sym.last_cache() for sym in syms]
     attempts = [sym.last_cache('START') for sym in syms]
-    goodbad = [a > c for a,c in zip(completed, attempts)]
+    goodbad = [comparenodates(a,c) for a,c in zip(completed, attempts)]
     desc = [sym.description for sym in syms]
     
     statuses = [SymStatus(sym.name, c, a, s, d) for sym, c, a, s, d in zip(syms, completed, attempts, goodbad, desc)]
@@ -755,7 +759,7 @@ f.write("\I must have figured out how to handle")
 if __name__ == "__main__":
     f.write("\n we shouldn't get here")
     if len(sys.argv) > 1:
-        app.run(debug=True)
+        app.run(host='127.0.0.1', port=81, debug=True)
     else:
         app.run('0.0.0.0')
 
