@@ -2,7 +2,9 @@
 
 from trump import SymbolManager
 
-
+from equitable.db.psyw import SQLAeng
+sme = SQLAeng('Trump','PROD')
+sm = SymbolManager(sme)
 
 import pika
 

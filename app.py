@@ -23,6 +23,9 @@ import matplotlib as m
 import matplotlib.pyplot as plt
 from jinja2 import Markup
 
+from equitable.db.psyw import SQLAeng
+sme = SQLAeng('Trump','PROD')
+sm = SymbolManager(sme)
 
 import pika
 
