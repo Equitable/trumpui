@@ -1,4 +1,4 @@
-f = open("trumpui.log",'wb+')
+f = open(r"D:\Quants\trumpui\trumpui.log",'wb+')
 f.write("pre flask import")
 from flask import Flask, request, session, url_for, redirect, \
     render_template, abort, g, flash, _app_ctx_stack, make_response, \
@@ -761,7 +761,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         app.run(host='127.0.0.1', port=81, debug=True)
     else:
-        app.run('0.0.0.0')
+        app.run()
 
 f.write("\n all done!")
 f.close()
