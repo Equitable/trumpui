@@ -29,11 +29,11 @@ sm = SymbolManager(sme)
 
 import pika
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='localhost'))
-channel = connection.channel()
+#connection = pika.BlockingConnection(pika.ConnectionParameters(
+#        host='localhost'))
+#channel = connection.channel()
 
-channel.queue_declare(queue='trumpweb')
+#channel.queue_declare(queue='trumpweb')
 
 def usessm(func):
     _name = func.__name__
@@ -765,4 +765,4 @@ if __name__ == "__main__":
 
 f.write("\n all done!")
 f.close()
-connection.close()
+#connection.close()
