@@ -1,4 +1,4 @@
-f = open("trumpui.log",'wb+')
+f = open(r"D:\Quants\trumpui\trumpui.log",'wb+')
 f.write("pre flask import")
 from flask import Flask, request, session, url_for, redirect, \
     render_template, abort, g, flash, _app_ctx_stack, make_response, \
@@ -24,6 +24,9 @@ import matplotlib as m
 import matplotlib.pyplot as plt
 from jinja2 import Markup
 
+from equitable.db.psyw import SQLAeng
+sme = SQLAeng('Trump','PROD')
+sm = SymbolManager(sme)
 
 import pika
 
@@ -149,10 +152,10 @@ def doelsearch(usrqry, name=False, desc=False, tags=False, meta=False):
                                                  }
                                                }
                                               })
-        
         # The hits, have hits...no idea.  See Elastic Search for more info.
         hits = hits['hits']['hits']
         return hits
+
 
 
 from collections import namedtuple, Counter
@@ -665,6 +668,12 @@ def t(tag):
         msg = ""
     return render_template('home.html', msg=msg, symbols=syms, qry="", results=results, name=False, desc=False, tags=True, meta=False)
 
+def comparenodates(y,z):
+    if (y is None) or (z is None):
+        return False
+    else:
+        return y > z
+        
 @app.route("/status")
 @app.route("/status/<tag>")
 @usessm
@@ -677,7 +686,7 @@ def status(tag=None):
     
     completed = [sym.last_cache() for sym in syms]
     attempts = [sym.last_cache('START') for sym in syms]
-    goodbad = [a > c for a,c in zip(completed, attempts)]
+    goodbad = [comparenodates(a,c) for a,c in zip(completed, attempts)]
     desc = [sym.description for sym in syms]
     
     statuses = [SymStatus(sym.name, c, a, s, d) for sym, c, a, s, d in zip(syms, completed, attempts, goodbad, desc)]
@@ -888,9 +897,9 @@ f.write("\I must have figured out how to handle")
 if __name__ == "__main__":
     f.write("\n we shouldn't get here")
     if len(sys.argv) > 1:
-        app.run(debug=True)
+        app.run(host='127.0.0.1', debug=True)
     else:
-        app.run('0.0.0.0')
+        app.run()
 
 f.write("\n all done!")
 f.close()

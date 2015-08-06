@@ -28,14 +28,14 @@
             </td><td>
 		  {% set comp = status.completed %}
 		  {% if comp %}
-            {{ comp.strftime('%Y %a %b %-d @ %-I:%M %p') }}
+            {{ comp.strftime('%Y %a %b %d @ %I:%M %p') }}
 		  {% else %}
 		    Never cached
 		  {% endif %}
             </td><td>
 		  {% set attm = status.attempted %}
 		  {% if comp %}
-            {{ attm.strftime('%Y %a %b %-d @ %-I:%M %p') }}
+            {{ attm.strftime('%Y %a %b %d @ %I:%M %p') }}
 		  {% else %}
 		    Never cached
 		  {% endif %}            </td><td>

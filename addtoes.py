@@ -6,7 +6,10 @@ from trump import SymbolManager
 
 es = Elasticsearch([{'host': 'localhost', 'port':9200}])
 ic = IndicesClient([{'host': 'localhost', 'port':9200}])
-sm = SymbolManager()
+
+from equitable.db.psyw import SQLAeng
+sme = SQLAeng('Trump','PROD')
+sm = SymbolManager(sme)
 
 syms = sm.search()
 
