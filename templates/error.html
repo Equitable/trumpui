@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'meta_header.html' %}
+
+    <title>Trump</title>
+
+    {% include 'bootstrap_header.html' %}
+  </head>
+
+  <body role="document">
+    <!-- Fixed navbar -->
+    {% include 'trump_header.html' %}
+
+
+    <div class="container theme-showcase" role="main">
+
+      <div class="page-header">
+        <h1>{{ msg_title }}</h1>
+      </div>
+   
+      <div class="row">
+        <h3>{{ msg_macro }}</h3>
+        {{ msg_info }}
+      </div>
+
+    </div> <!-- /container -->
+
+
+    {% include 'bootstrap_footer.html' %}
+  </body>
+</html>
