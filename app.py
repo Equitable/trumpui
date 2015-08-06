@@ -603,21 +603,8 @@ def status(tag=None):
 @app.route("/tags/<tag>")
 @usessm
 def tags(tag=None):
-    
-    if tag:
-        syms = sm.search(tag,tags=True)
-    else:
-        syms = sm.search()
-    
-    tags = [[t.tag for t in sym.tags] for sym in syms]
-    
-    tags = [item for sublist in tags for item in sublist]
-    
-    counted = Counter(tags)
-    unique = counted.keys()
-    unique.sort()
-    
-    return render_template('tags_list.html', count=counted, tags=unique)
+    tags = sm.tag_counts()
+    return render_template('tags_list.html', tags=tags)
 
 
 @app.route("/q/", methods=['POST'])

@@ -17,7 +17,7 @@
         <div class="col-md-2">
         <h3>Tags</h3>
         <table class="table table-condensed">
-          {% for tag in tags %}
+          {% for tag,count in tags %}
            <tr>
              <td>
                <a role="button" class="btn btn-default" href="{{ url_for('tc',tag=tag) }}">Cache</a>
@@ -26,7 +26,7 @@
             <a role="button" class="btn btn-success" href="{{ url_for('search',tag=tag) }}">{{ tag }}</a>
             </td>
             <td>
-              {{ count[tag] }}
+              {{ count }}
              </td>
           </tr>
          {% endfor %}
