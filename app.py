@@ -383,6 +383,7 @@ def log(symbol):
 
 
 @app.route("/validity/<symbol>")
+@usessm
 def validity(symbol):
     sym = sm.get(symbol)
     
