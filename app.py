@@ -85,10 +85,11 @@ def doelsearch(usrqry, name=False, desc=False, tags=False, meta=False):
             qrys.append(mt3)
 
         if desc:
-            mt4 = {'match' : {'desc' : usrqry } }
+            mt4 = {'match' : {'description' : usrqry } }
             qrys.append(mt4)
+            
             # if the string is anywhere in the symbol name
-            fz4 = {'fuzzy' : {'desc' : {'value' : usrqry} } }
+            fz4 = {'fuzzy' : {'description' : {'value' : usrqry} } }
             qrys.append(fz4)
             
         if meta:
@@ -227,11 +228,14 @@ def cleanmaxmin(symbol):
     
     def tostr(obj):
         if isinstance(obj, dt.datetime):
-            return obj.strftime("%Y-%m-%d")
+            if obj.year > 1900:
+                return obj.strftime("%Y-%m-%d")
+            else:
+                return str(obj.year)
         else:
             return str(obj)
      
-    return Markup(" to ".join([tostr(mm) for mm in mxmn]))
+    return Markup("{1} - {0}".format(tostr(mxmn[0]),tostr(mxmn[1])))
 
 app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
 
@@ -604,34 +608,35 @@ def search(tag=None):
         print start, stop
         
         msg = ""
-        if fuzz:
-            hits = doelsearch(qry, name=name, desc=desc, tags=tags, meta=meta)
-            
-            if hits:
-                nfuzz = len(hits)
-                hits = hits[start:stop]
-            else:
-                hits = []
-            msg += "Did fuzzy search, found {}.  ".format(nfuzz)
-            nresult = nfuzz
-            
-        if exct:
-            results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
-            if len(results) > 0:
-                nexct = len(results)
-                results = results[start:stop]
-            msg += "Did exact search, found {}.  ".format(nexct)
-            nresult = nexct
-            if fuzz:
-                msg += "{} symbols, total.  ".format(nexct + nfuzz)
-                nresult = nexct + nfuzz
-        
-        if fuzz and exct:
-            msg += "Showing from {} up to {}.".format(start, stop)
-        if (not fuzz) and (not exct):
-            msg = "Select either Fuzzy, Exact or Both.  "
         if not any([x for x in [name, desc, tags, meta]]):
             msg += "Choose a combination of name, description, tags and meta"
+        else:
+            if fuzz:
+                hits = doelsearch(qry, name=name, desc=desc, tags=tags, meta=meta)
+
+                if hits:
+                    nfuzz = len(hits)
+                    hits = hits[start:stop]
+                else:
+                    hits = []
+                msg += "Did fuzzy search, found {}.  ".format(nfuzz)
+                nresult = nfuzz
+
+            if exct:
+                results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
+                if len(results) > 0:
+                    nexct = len(results)
+                    results = results[start:stop]
+                msg += "Did exact search, found {}.  ".format(nexct)
+                nresult = nexct
+                if fuzz:
+                    msg += "{} symbols, total.  ".format(nexct + nfuzz)
+                    nresult = nexct + nfuzz
+
+            if fuzz and exct:
+                msg += "Showing from {} up to {}.".format(start, stop)
+            if (not fuzz) and (not exct):
+                msg = "Select either Fuzzy, Exact or Both.  "
             
             
     else:
