@@ -622,9 +622,12 @@ def search(tag=None):
                     hits = []
                 msg += "Did fuzzy search, found {}.  ".format(nfuzz)
                 nresult = nfuzz
-
+                
             if exct:
-                results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
+                if len(qry) > 0:
+                    results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
+                else:
+                    results = []
                 if len(results) > 0:
                     nexct = len(results)
                     results = results[start:stop]
@@ -634,10 +637,13 @@ def search(tag=None):
                     msg += "{} symbols, total.  ".format(nexct + nfuzz)
                     nresult = nexct + nfuzz
 
-            if fuzz and exct:
-                msg += "Showing from {} up to {}.".format(start, stop)
-            if (not fuzz) and (not exct):
-                msg = "Select either Fuzzy, Exact or Both.  "
+            if fuzz or exct:
+                msg += "Showing from {} up to {}.  ".format(start, stop)
+                if nexct + nfuzz == 0:
+                    msg += "Maybe change the search settings?  ".format(nfuzz)
+
+        if (not fuzz) and (not exct):
+            msg += "Select either Fuzzy, Exact or Both.  "
             
             
     else:
