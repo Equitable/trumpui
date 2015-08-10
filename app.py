@@ -30,8 +30,9 @@ sm = SymbolManager(sme)
 
 import pika
 
+credentials = pika.PlainCredentials('quants','quants')
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='localhost'))
+        host='localhost',credentials=credentials))
 channel = connection.channel()
 
 channel.queue_declare(queue='trumpweb')
@@ -915,4 +916,4 @@ if __name__ == "__main__":
 
 f.write("\n all done!")
 f.close()
-connection.close()
+#connection.close()

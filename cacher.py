@@ -8,7 +8,8 @@ sm = SymbolManager(sme)
 
 import pika
 
-rabbit = pika.ConnectionParameters(host='localhost')
+credentials = pika.PlainCredentials('quants','quants')
+rabbit = pika.ConnectionParameters(host='localhost',credentials=credentials)
 
 connection = pika.BlockingConnection(rabbit)
 channel = connection.channel()
