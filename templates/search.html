@@ -24,7 +24,6 @@
               <input type="text" class="form-control" id="usrqry" name="qry" placeholder="{{ qry }}">
               {% if qry %}
               <h3><span class="label label-info">searched: {{ qry }}</span></h3>
-              {{ "{0} SQL, {1} Fuzzy Results found.".format(*nresults) }}
               {% endif %}
               {% if msg %}
               <h3><span class="label label-default">{{ msg }}</span></h3>
@@ -45,8 +44,11 @@
                     <p><label><input type="checkbox" name="scdesc" value="True" {% if desc %}checked{% endif %}>Description</label></p>
                     <p><label><input type="checkbox" name="sctags" value="True" {% if tags %}checked{% endif %}>Tags</label></p>
                     <p><label><input type="checkbox" name="scmeta" value="True" {% if meta %}checked{% endif %}>Meta</label></p>
-                    <p><label><input type="checkbox" name="scfuzz" value="True" {% if fuzz %}checked{% endif %}>Fuzzy (Beta)</label></p>
+                    <p><label><input type="checkbox" name="scfuzz" value="True" {% if fuzz %}checked{% endif %} title="Using an elastic search strategy">Fuzzy (Beta)</label></p>
+					<p><label><input type="checkbox" name="scexct" value="True" {% if exct %}checked{% endif %} title="Using SQL's LIKE logic">Exact</label></p>
                 </div>
+				  <input type="text" class="form-control" id="scstart" name="scstart" placeholder=0 title="Start of result slice, beginning with Zero.">
+				  <input type="text" class="form-control" id="scstop"  name="scstop" placeholder=100 title="End of result slice.">
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-f = open("trumpui.log",'wb+')
+f = open(r"D:\Quants\trumpui\trumpui.log",'wb+')
 f.write("pre flask import")
 from flask import Flask, request, session, url_for, redirect, \
     render_template, abort, g, flash, _app_ctx_stack, make_response, \
@@ -18,6 +18,7 @@ import traceback
 
 import trump
 from trump import SymbolManager
+from trump.indexing import indexingtypes
 
 import matplotlib as m
 import matplotlib.pyplot as plt
@@ -29,8 +30,9 @@ sm = SymbolManager(sme)
 
 import pika
 
+credentials = pika.PlainCredentials('quants','quants')
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='localhost'))
+        host='localhost',credentials=credentials))
 channel = connection.channel()
 
 channel.queue_declare(queue='trumpweb')
@@ -47,68 +49,115 @@ def usessm(func):
     smusingroute.__name__ = _name
     return smusingroute
     
-def doelsearch(usrqry):
+def doelsearch(usrqry, name=False, desc=False, tags=False, meta=False):
     
-    print "found a usrqry : " + str(usrqry)
     if usrqry:
         attrs = sm.existing_meta_attr()
-        print attrs
-
+        
+        qrys = []
+        if name:
         # if the string matches the symbol name
-        mt1 = {'match' : {'name' : usrqry } }
+            mt1 = {'match' : {'name' : usrqry } }
+            qrys.append(mt1)
 
-        # if the string matches a tag
-        mt2 = {'match' : {'tags' : usrqry } }
+            # if the string is anywhere in the symbol name
+            wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }        
+            qrys.append(wc1)
 
-        # same thing as above?
-        mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
+            # if the string is anywhere in the symbol name
+            fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
+            qrys.append(fz1)
+            
+        if tags:
+            # if the string matches a tag
+            mt2 = {'match' : {'tags' : usrqry } }
+            qrys.append(mt2)
 
+            # if the string is anywhere in the symbol name
+            wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
+            qrys.append(wc2)
+ 
+            # if the string is anywhere in the symbol name
+            fz2 = {'fuzzy' : {'tags' : {'value' : usrqry} } }
+            qrys.append(fz2)
 
-        # if the string is anywhere in the topics?
-        nd1 = {'nested' : {
-                'path' : 'meta',
-                'score_mode' : 'avg',
-                'query' : {
-                    'bool': {
-                        'must' : [{'match' : {'meta.topics' : usrqry } }]
-                            }
-                          }
+        if name and tags:
+            mt3 = {'multi_match' : {'query' : usrqry, 'fields' : ['name^2', 'tags']}}
+            qrys.append(mt3)
+
+        if desc:
+            mt4 = {'match' : {'description' : usrqry } }
+            qrys.append(mt4)
+            
+            # if the string is anywhere in the symbol name
+            fz4 = {'fuzzy' : {'description' : {'value' : usrqry} } }
+            qrys.append(fz4)
+            
+        if meta:
+            mixture = [usrqry.lower(), usrqry.upper(), usrqry.title()]
+            
+            # if the string matches a meta attribute:
+            ef5 = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'filter' : {
+                        'exists': {
+                            'field' : mixture }}}}
+            qrys.append(ef5)       
+                   
+            # if the string is anywhere in the topics?
+            # NOT SURE IF ITS ACTUALLY DOING ANYTHING
+            ndm5 = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'query' : {
+                        'bool': {
+                            'must' : [{'match' : {'meta.topics' : usrqry } }]
+                                }
+                              }
+                       }
                    }
-               }
+            qrys.append(ndm5)
 
-        # if the whole string is anywhere in any of the meta values
-        nd2 = {'nested' : {
-                'path' : 'meta',
-                'score_mode' : 'avg',
-                'query' : {
-                    'multi_match': {'query' : usrqry, 'fields' : ['meta.*']}
-                          }
+            # if the whole string is anywhere in any of the meta values
+            # NOT SURE IF ITS ACTUALLY DOING ANYTHING
+            ndq5 = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'query' : {
+                        'multi_match': {'query' : mixture , 'fields' : ['meta.*']}
+                              }
+                       }
                    }
-               }
-
-        # if the string is anywhere in the symbol name
-        wc1 = {'wildcard' : {'name' : "*" + usrqry + "*" } }
-
-        # if the string is anywhere in the symbol name
-        wc2 = {'wildcard' : {'tags' : "*" + usrqry + "*" } }
-
-        # if it's anywhere in any field, in full
-        qs1 = {'query_string' : {'query' : usrqry } }
-
-        # if the string is anywhere in the symbol name
-        fz1 = {'fuzzy' : {'name' : {'value' : usrqry} } }
+            qrys.append(ndq5)
+            
+            # This one is the one responsible for picking up partial, or erroneous, CUSIPs in meta values.
+            fuzzies = [{'fuzzy' : {"meta." + a : {'min_similarity' : 0.1, 'value' : usrqry}}} for a in attrs]
+            multifuzz = {'dis_max' : {'queries' : fuzzies, 'tie_breaker' : 0.7}}
+            multifuzz = {'nested' : {
+                    'path' : 'meta',
+                    'score_mode' : 'avg',
+                    'query' : multifuzz}}
+            qrys.append(multifuzz)
+            
+            
+        if name and tags and desc and meta:
+            # if it's anywhere in any field, in full
+            qs6 = {'query_string' : {'query' : usrqry } }
+            qrys.append(qs6)
 
 
         hits = es.search(index='trump', body={'query' : 
                                               {'dis_max' :
                                                 {'tie_breaker' : 0.3,
-                                                 'queries' : [mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
+                                                 'queries' : qrys #[mt1, mt2, wc1, wc2, nd2] #, mt2, nd1, wc1, wc2]
                                                  }
                                                }
                                               })
+        # The hits, have hits...no idea.  See Elastic Search for more info.
+        hits = hits['hits']['hits']
+        return hits
 
-        #Elastic search returns hit documents, of hits, with hits....
-        return hits['hits']['hits']
 
 
 from collections import namedtuple, Counter
@@ -180,11 +229,14 @@ def cleanmaxmin(symbol):
     
     def tostr(obj):
         if isinstance(obj, dt.datetime):
-            return obj.strftime("%Y-%m-%d")
+            if obj.year > 1900:
+                return obj.strftime("%Y-%m-%d")
+            else:
+                return str(obj.year)
         else:
             return str(obj)
      
-    return Markup(" to ".join([tostr(mm) for mm in mxmn]))
+    return Markup("{1} - {0}".format(tostr(mxmn[0]),tostr(mxmn[1])))
 
 app.jinja_env.globals.update(cleanmaxmin=cleanmaxmin)   
 
@@ -332,6 +384,7 @@ def log(symbol):
 
 
 @app.route("/validity/<symbol>")
+@usessm
 def validity(symbol):
     sym = sm.get(symbol)
     
@@ -527,53 +580,92 @@ def search(tag=None):
     results = []
     hits = []
     
-    nresults = [0,0]
+    nresult = 0
+    nfuzz, nexct = 0, 0
 
+    start = 0
+    stop = 100
+    
     if request.method == 'POST':
         
         qry = request.form['qry']
         
         fuzz = request.form.has_key('scfuzz')
+        exct = request.form.has_key('scexct')
         name = request.form.has_key('scname')
         desc = request.form.has_key('scdesc')
         tags = request.form.has_key('sctags')
         meta = request.form.has_key('scmeta')
         
-        regular = True
+        try:
+            start = int(request.form['scstart'])
+        except:
+            start = 0
+        
+        try:
+            stop = int(request.form['scstop'])
+        except:
+            stop = 100
+        
+        print start, stop
         
         msg = ""
-        if fuzz:
-            msg += " Did fuzzy search"
-            hits = doelsearch(qry)
-            
-            if hits:
-                nresults[0] = len(hits)
-                hits = hits[:100]
-            else:
-                hits = []
+        if not any([x for x in [name, desc, tags, meta]]):
+            msg += "Choose a combination of name, description, tags and meta"
+        else:
+            if fuzz:
+                hits = doelsearch(qry, name=name, desc=desc, tags=tags, meta=meta)
 
-        if regular:
-            results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
-            if len(results) > 0:
-                nresults[1] = len(results)
-                results = results[:100]
-            msg += " Did SQL search"
-      
+                if hits:
+                    nfuzz = len(hits)
+                    hits = hits[start:stop]
+                else:
+                    hits = []
+                msg += "Did fuzzy search, found {}.  ".format(nfuzz)
+                nresult = nfuzz
+                
+            if exct:
+                if len(qry) > 0:
+                    results = sm.search(qry, name=name, desc=desc, tags=tags, meta=meta, dolikelogic=True)
+                else:
+                    results = []
+                if len(results) > 0:
+                    nexct = len(results)
+                    results = results[start:stop]
+                msg += "Did exact search, found {}.  ".format(nexct)
+                nresult = nexct
+                if fuzz:
+                    msg += "{} symbols, total.  ".format(nexct + nfuzz)
+                    nresult = nexct + nfuzz
+
+            if fuzz or exct:
+                msg += "Showing from {} up to {}.  ".format(start, stop)
+                if nexct + nfuzz == 0:
+                    msg += "Maybe change the search settings?  ".format(nfuzz)
+
+        if (not fuzz) and (not exct):
+            msg += "Select either Fuzzy, Exact or Both.  "
+            
+            
     else:
-        name, desc, tags, meta, fuzz = False, False, False, False, False
+        name, desc, tags, meta, fuzz, exct = False, False, False, False, False, True
         if tag:
             results = sm.search(tag, name=False, desc=False, tags=True, meta=False, dolikelogic=False)
             if len(results) > 0:
-                nresults[0] = len(results)
+                nexct = len(results)
+                results = results[start:stop]
             qry = tag
-            msg += " Did Tag Search"
+            msg += "Did tag search, found {}.  ".format(nexct)
+            nresult = nexct
             tags=True
-            
+            msg += "Showing from {} up to {}.".format(start, stop)
         else:
+            name = True
             qry = ""
             msg = ""
-        
-    return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz, hits=hits, nresults=nresults)
+
+    
+    return render_template('search.html', msg=msg, symbols=syms, qry=qry, results=results, name=name, desc=desc, tags=tags, meta=meta, fuzz=fuzz, exct=exct, hits=hits, nresults=nresult)
 
 
 @app.route("/t/<tag>")
@@ -601,7 +693,7 @@ def comparenodates(y,z):
 def status(tag=None):
     
     if tag:
-        syms = sm.search(tag,tags=True)
+        syms = sm.search(tag, tags=True)
     else:
         syms = sm.search()
     
@@ -694,6 +786,63 @@ def orfssaved():
     nfo = "{} {}".format(str(orfss), comment)
     return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo, symbol=sym)
 
+@app.route("/outofboundorfs/", methods=['POST'])
+@usessm
+def outofboundorfs():
+    usrinput = request.form
+    
+    switch = usrinput['switch']
+    indx_input = usrinput['indx_input']
+    valu_input = usrinput['valu_input']
+    comment = usrinput['comment']
+    sym = usrinput['symbol']
+    sym = sm.get(sym)
+    
+    indtt = indexingtypes[sym.index.indimp]
+    indkwargs = sym.index.getkwargs()
+    indt = indtt(sym.index.case, **indkwargs)
+    
+    # Then it must be python code...
+    #  TODO, move all of this logic, into the specific orfs_ind_from_str function...
+    if "{" in indx_input:
+        indx_pyval = indt.orfs_ind_from_str(indx_input)
+    else:
+        #Did this instead of strptime, to give the user a chance with the error message
+        YYYY = int(indx_input.split("-")[0])
+        MM = int(indx_input.split("-")[1])
+        DD = int(indx_input.split("-")[2])
+        indx_pyval = dt.datetime(YYYY, MM, DD)
+         
+    def isgood(v):
+        if len(v) > 0 and v != "None":
+            return True
+        else:
+            return False
+    
+    def togood(v):
+        return float(v)
+    
+    if not isgood(valu_input):
+        raise Exception("{} is no good")
+        
+    print switch
+    val = togood(valu_input)
+    
+    now = dt.datetime.now()
+    if switch == u'override':
+        print "Detected Override"
+        sm.add_override(sym, indx_pyval, val, dt_log=now, user="Nobody", comment=comment)
+    else: # switch == u'override':
+        print "Deteded Fail Safe"
+        sm.add_fail_safe(sym, indx_pyval, val, dt_log=now, user="Nobody", comment=comment)
+        
+    sym.cache()
+    
+    nfo = "{} {}".format(str(orfss), comment)
+    return render_template('confirmation.html', msg_title=sym.name, msg_macro=sym.description, msg_info=nfo, symbol=sym)
+
+    return "Finished!"
+
 @app.route("/installtrump")
 def installtrump():
     from trump import SetupTrump
@@ -727,7 +876,9 @@ def s(symbol):
     
     cachedonce = not (lastcache is None)
     
-    return render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr, lastcache=lastcache, cachedonce=cachedonce)
+    page = render_template('symbol_page.html', symbol=sym, sdf=S, dtype=dtype, ind=ind,lind=lind, sdfhtml=tailhtml, metaattr=metaattr, lastcache=lastcache, cachedonce=cachedonce)
+
+    return page
 
 @app.route("/delete/<symbol>")
 @usessm
@@ -759,10 +910,10 @@ f.write("\I must have figured out how to handle")
 if __name__ == "__main__":
     f.write("\n we shouldn't get here")
     if len(sys.argv) > 1:
-        app.run(host='127.0.0.1', port=81, debug=True)
+        app.run(host='127.0.0.1', debug=True)
     else:
-        app.run('0.0.0.0')
+        app.run()
 
 f.write("\n all done!")
 f.close()
-connection.close()
+#connection.close()
